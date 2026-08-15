@@ -1,0 +1,1090 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f5f7f6" />
+    <link rel="icon" href="data:," />
+    <title>Origin Ops | 服务器总览</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">跳至主要内容</a>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="主导航">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true"
+            ><i></i><i></i><i></i
+          ></span>
+          <span>origin<span class="brand-dot">.</span>ops</span>
+        </div>
+
+        <div class="workspace">
+          <span class="workspace-label">工作空间</span>
+          <button
+            class="workspace-switcher"
+            type="button"
+            aria-label="切换工作空间"
+            data-demo-action="多主机纳管接入后可在此切换工作空间。"
+          >
+            <span class="avatar">T</span>
+            <span>腾讯云生产环境</span>
+            <svg aria-hidden="true" viewBox="0 0 24 24">
+              <path d="m7 10 5 5 5-5" />
+            </svg>
+          </button>
+        </div>
+
+        <nav class="primary-nav">
+          <button
+            class="nav-link is-active"
+            type="button"
+            data-target="overview"
+            aria-current="page"
+          >
+            <svg aria-hidden="true" viewBox="0 0 24 24">
+              <rect x="3" y="3" width="7" height="7" rx="1" />
+              <rect x="14" y="3" width="7" height="7" rx="1" />
+              <rect x="3" y="14" width="7" height="7" rx="1" />
+              <rect x="14" y="14" width="7" height="7" rx="1" />
+            </svg>
+            <span>总览</span>
+          </button>
+          <button class="nav-link" type="button" data-target="applications">
+            <svg aria-hidden="true" viewBox="0 0 24 24">
+              <path d="m21 16-9 5-9-5 9-5 9 5Z" />
+              <path d="m3 12 9 5 9-5M3 8l9 5 9-5-9-5-9 5Z" />
+            </svg>
+            <span>应用</span><span class="nav-count">3</span>
+          </button>
+          <button class="nav-link" type="button" data-target="services">
+            <svg aria-hidden="true" viewBox="0 0 24 24">
+              <rect x="3" y="3" width="18" height="5" rx="1" />
+              <rect x="3" y="10" width="18" height="5" rx="1" />
+              <rect x="3" y="17" width="18" height="4" rx="1" />
+              <path d="M7 5.5h.01M7 12.5h.01M7 19h.01" />
+            </svg>
+            <span>服务</span><span class="nav-count">8</span>
+          </button>
+          <button class="nav-link" type="button" data-target="deployments">
+            <svg aria-hidden="true" viewBox="0 0 24 24">
+              <path d="M12 3v12" />
+              <path d="m7 8 5-5 5 5" />
+              <path d="M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5" />
+            </svg>
+            <span>发布记录</span>
+          </button>
+        </nav>
+
+        <div class="sidebar-footer">
+          <button class="nav-link" type="button" data-target="events">
+            <svg aria-hidden="true" viewBox="0 0 24 24">
+              <path
+                d="M18 8A6 6 0 0 0 6 8c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"
+              />
+            </svg>
+            <span>通知</span
+            ><span class="notification-dot" aria-label="1 条未读通知"></span>
+          </button>
+          <button
+            class="nav-link"
+            type="button"
+            aria-label="设置"
+            data-demo-action="告警、访问控制和采集频率将在设置中配置。"
+          >
+            <svg aria-hidden="true" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="3" />
+              <path
+                d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.12 2.12-.06-.06a1.7 1.7 0 0 0-1.88-.34 1.7 1.7 0 0 0-1.03 1.55V20.3h-3v-.09A1.7 1.7 0 0 0 10.68 18.66a1.7 1.7 0 0 0-1.88.34l-.06.06-2.12-2.12.06-.06A1.7 1.7 0 0 0 7.02 15 1.7 1.7 0 0 0 5.47 14H5.4v-3h.07a1.7 1.7 0 0 0 1.55-1.03 1.7 1.7 0 0 0-.34-1.88l-.06-.06 2.12-2.12.06.06a1.7 1.7 0 0 0 1.88.34A1.7 1.7 0 0 0 11.7 4.76v-.09h3v.09a1.7 1.7 0 0 0 1.03 1.55 1.7 1.7 0 0 0 1.88-.34l.06-.06 2.12 2.12-.06.06a1.7 1.7 0 0 0-.34 1.88A1.7 1.7 0 0 0 20.93 11H21v3h-.07A1.7 1.7 0 0 0 19.4 15Z"
+              />
+            </svg>
+            <span>设置</span>
+          </button>
+        </div>
+      </aside>
+
+      <div class="page-wrap">
+        <header class="topbar">
+          <div class="breadcrumb">
+            <span>腾讯云生产环境</span><span>/</span
+            ><strong id="page-label">总览</strong>
+          </div>
+          <div class="topbar-actions">
+            <span class="demo-badge"><span></span>演示数据</span>
+            <button
+              class="icon-button"
+              id="theme-toggle"
+              type="button"
+              aria-label="切换颜色主题"
+              title="切换颜色主题"
+            >
+              <svg aria-hidden="true" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="4" />
+                <path
+                  d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"
+                />
+              </svg>
+            </button>
+            <button
+              class="icon-button"
+              id="refresh-button"
+              type="button"
+              aria-label="刷新状态"
+              title="刷新状态"
+            >
+              <svg aria-hidden="true" viewBox="0 0 24 24">
+                <path d="M21 12a9 9 0 0 1-15.2 6.5L3 16" />
+                <path d="M3 21v-5h5M3 12A9 9 0 0 1 18.2 5.5L21 8" />
+                <path d="M16 8h5V3" />
+              </svg>
+            </button>
+            <button class="profile-button" type="button" aria-label="账户菜单">
+              Z
+            </button>
+          </div>
+        </header>
+
+        <main id="main-content">
+          <section
+            class="page-heading"
+            id="overview"
+            aria-labelledby="overview-title"
+          >
+            <div>
+              <div class="eyebrow">
+                <span class="live-dot"></span>当前时刻快照
+                <span class="muted"
+                  >服务器时间
+                  <time id="server-time" datetime="2026-08-15T13:24"
+                    >2026-08-15 13:24</time
+                  ></span
+                >
+              </div>
+              <h1 id="overview-title">服务器总览</h1>
+              <p>
+                主机 <code>sub2api</code>
+                <span aria-hidden="true">·</span> 腾讯云 CVM
+                <span aria-hidden="true">·</span> 广州
+                <span aria-hidden="true">·</span> 实时采集
+              </p>
+            </div>
+          </section>
+
+          <section aria-labelledby="current-metrics-title">
+            <div class="current-metrics-heading">
+              <span class="eyebrow" id="current-metrics-title"
+                >服务器当前指标</span
+              ><time id="current-metrics-time" datetime="2026-08-15T13:24"
+                >更新于 13:24</time
+              >
+            </div>
+            <div class="metric-grid" aria-label="主机当前指标">
+              <article class="metric-card">
+                <div class="metric-heading">
+                  <span>CPU 使用率</span
+                  ><span class="metric-icon icon-blue"
+                    ><svg aria-hidden="true" viewBox="0 0 24 24">
+                      <rect x="7" y="7" width="10" height="10" rx="1" />
+                      <path
+                        d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3"
+                      /></svg
+                  ></span>
+                </div>
+                <div class="metric-value">
+                  <strong id="cpu-value">23.8%</strong
+                  ><span class="change is-good">-4.1%</span>
+                </div>
+                <svg
+                  class="sparkline spark-blue"
+                  viewBox="0 0 240 46"
+                  preserveAspectRatio="none"
+                  aria-label="CPU 使用率趋势"
+                >
+                  <path
+                    class="spark-area"
+                    d="M0 35 L15 28 L30 32 L45 16 L60 24 L75 22 L90 28 L105 15 L120 21 L135 18 L150 25 L165 14 L180 20 L195 10 L210 19 L225 16 L240 22 V46 H0Z"
+                  />
+                  <path
+                    d="M0 35 L15 28 L30 32 L45 16 L60 24 L75 22 L90 28 L105 15 L120 21 L135 18 L150 25 L165 14 L180 20 L195 10 L210 19 L225 16 L240 22"
+                  />
+                </svg>
+                <span class="metric-caption"
+                  >4 vCPU <span class="muted">·</span> Load 0.71</span
+                >
+              </article>
+              <article class="metric-card">
+                <div class="metric-heading">
+                  <span>内存</span
+                  ><span class="metric-icon icon-teal"
+                    ><svg aria-hidden="true" viewBox="0 0 24 24">
+                      <rect x="5" y="5" width="14" height="14" rx="1" />
+                      <path
+                        d="M9 9h6v6H9zM9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 15h3M1 9h3M1 15h3"
+                      /></svg
+                  ></span>
+                </div>
+                <div class="metric-value">
+                  <strong id="memory-value">2.81 GB</strong
+                  ><span class="of-total">/ 8 GB</span>
+                </div>
+                <div class="progress-track" aria-label="内存使用 35%">
+                  <span
+                    class="progress-fill fill-teal"
+                    style="width: 35%"
+                  ></span>
+                </div>
+                <span class="metric-caption"
+                  >可用 5.19 GB <span class="muted">·</span> 缓存 620 MB</span
+                >
+              </article>
+              <article class="metric-card">
+                <div class="metric-heading">
+                  <span>磁盘</span
+                  ><span class="metric-icon icon-amber"
+                    ><svg aria-hidden="true" viewBox="0 0 24 24">
+                      <ellipse cx="12" cy="5" rx="7" ry="3" />
+                      <path
+                        d="M5 5v7c0 1.66 3.13 3 7 3s7-1.34 7-3V5M5 12v7c0 1.66 3.13 3 7 3s7-1.34 7-3v-7"
+                      /></svg
+                  ></span>
+                </div>
+                <div class="metric-value">
+                  <strong>43.2 GB</strong><span class="of-total">/ 80 GB</span>
+                </div>
+                <div class="progress-track" aria-label="磁盘使用 54%">
+                  <span
+                    class="progress-fill fill-amber"
+                    style="width: 54%"
+                  ></span>
+                </div>
+                <span class="metric-caption"
+                  >已用 54% <span class="muted">·</span> 预计可用 118 天</span
+                >
+              </article>
+              <article class="metric-card">
+                <div class="metric-heading">
+                  <span>网络出站</span
+                  ><span class="metric-icon icon-violet"
+                    ><svg aria-hidden="true" viewBox="0 0 24 24">
+                      <path d="M4 17 10 11l4 4 6-7" />
+                      <path d="M16 8h4v4" /></svg
+                  ></span>
+                </div>
+                <div class="metric-value">
+                  <strong id="network-value">3.8 MB/s</strong
+                  ><span class="change is-good">稳定</span>
+                </div>
+                <svg
+                  class="sparkline spark-violet"
+                  viewBox="0 0 240 46"
+                  preserveAspectRatio="none"
+                  aria-label="网络出站趋势"
+                >
+                  <path
+                    class="spark-area"
+                    d="M0 33 L15 28 L30 34 L45 30 L60 20 L75 29 L90 19 L105 23 L120 9 L135 25 L150 20 L165 27 L180 14 L195 19 L210 12 L225 25 L240 17 V46 H0Z"
+                  />
+                  <path
+                    d="M0 33 L15 28 L30 34 L45 30 L60 20 L75 29 L90 19 L105 23 L120 9 L135 25 L150 20 L165 27 L180 14 L195 19 L210 12 L225 25 L240 17"
+                  />
+                </svg>
+                <span class="metric-caption"
+                  >入站 1.2 MB/s <span class="muted">·</span> 本月 186 GB</span
+                >
+              </article>
+            </div>
+          </section>
+
+          <section class="trend-panel" aria-labelledby="trend-title">
+            <div class="trend-heading">
+              <div>
+                <span class="eyebrow"
+                  >分析区间
+                  <span id="trend-range-name"
+                    >2026-08-14 13:24 至 2026-08-15 13:24</span
+                  ></span
+                >
+                <h2 id="trend-title">指标变化</h2>
+                <p id="trend-sample-note">96 条采样记录 · 每 15 分钟</p>
+              </div>
+              <form
+                class="time-range-filter"
+                id="time-range-form"
+                aria-label="指标分析时间范围"
+                novalidate
+              >
+                <label
+                  >开始时间<input
+                    id="range-start"
+                    name="start"
+                    type="datetime-local"
+                    step="60"
+                    required
+                /></label>
+                <span class="range-separator" aria-hidden="true">至</span>
+                <label
+                  >结束时间<input
+                    id="range-end"
+                    name="end"
+                    type="datetime-local"
+                    step="60"
+                    required
+                /></label>
+                <button class="primary-button" type="submit">查询</button>
+                <span
+                  class="range-feedback"
+                  id="range-feedback"
+                  role="status"
+                  aria-live="polite"
+                ></span>
+              </form>
+              <div class="trend-actions">
+                <div class="metric-switcher" role="group" aria-label="趋势指标">
+                  <button
+                    class="is-selected"
+                    type="button"
+                    data-trend-metric="cpu"
+                  >
+                    CPU
+                  </button>
+                  <button type="button" data-trend-metric="memory">内存</button>
+                  <button type="button" data-trend-metric="network">
+                    网络
+                  </button>
+                </div>
+                <button
+                  class="secondary-button"
+                  id="open-range-data"
+                  type="button"
+                >
+                  查看采样明细
+                  <svg aria-hidden="true" viewBox="0 0 24 24">
+                    <path d="M5 12h14M13 6l6 6-6 6" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div class="trend-content">
+              <div class="chart-wrap">
+                <div class="chart-label">
+                  <strong id="trend-metric-label">CPU 使用率</strong
+                  ><span id="trend-current-value">区间末值 23.8%</span>
+                </div>
+                <div class="chart-stage" id="chart-stage">
+                  <div
+                    class="trend-y-axis"
+                    id="trend-y-axis-left"
+                    aria-hidden="true"
+                  ></div>
+                  <div class="chart-plot">
+                    <svg
+                      class="trend-chart"
+                      id="trend-chart"
+                      viewBox="0 0 720 180"
+                      preserveAspectRatio="none"
+                      role="group"
+                      tabindex="0"
+                      aria-labelledby="trend-chart-desc"
+                      aria-label="可浏览的指标趋势图"
+                    >
+                      <title id="trend-chart-desc">
+                        所选时间范围内的 CPU 使用率变化趋势
+                      </title>
+                      <path
+                        class="chart-grid"
+                        d="M24 24H696M24 68H696M24 112H696M24 156H696"
+                      />
+                      <polygon
+                        class="trend-area"
+                        id="trend-area"
+                        points="24,124 120,92 216,104 312,58 408,88 504,72 600,94 696,66 696,156 24,156"
+                      />
+                      <line
+                        class="trend-hover-guide"
+                        id="trend-hover-guide"
+                        x1="0"
+                        x2="0"
+                        y1="24"
+                        y2="156"
+                      />
+                      <polyline
+                        class="trend-line"
+                        id="trend-line"
+                        points="24,124 120,92 216,104 312,58 408,88 504,72 600,94 696,66"
+                      />
+                      <circle
+                        class="trend-point"
+                        id="trend-point"
+                        cx="696"
+                        cy="66"
+                        r="4"
+                      />
+                      <circle
+                        class="trend-hover-point"
+                        id="trend-hover-point"
+                        cx="0"
+                        cy="0"
+                        r="4"
+                      />
+                    </svg>
+                    <div
+                      class="chart-tooltip"
+                      id="chart-tooltip"
+                      role="tooltip"
+                      hidden
+                    ></div>
+                  </div>
+                  <div
+                    class="trend-y-axis"
+                    id="trend-y-axis-right"
+                    aria-hidden="true"
+                  ></div>
+                </div>
+                <div class="trend-axis" id="trend-axis">
+                  <span>00:00</span><span>12:00</span><span>现在</span>
+                </div>
+              </div>
+              <dl class="trend-summary" aria-label="所选区间统计">
+                <div>
+                  <dt id="summary-one-label">采样平均值</dt>
+                  <dd id="summary-one-value">22.6%</dd>
+                  <small id="summary-one-note">CPU 使用率</small>
+                </div>
+                <div>
+                  <dt id="summary-two-label">区间变化</dt>
+                  <dd id="summary-two-value">+6.8%</dd>
+                  <small id="summary-two-note">起点至结束</small>
+                </div>
+                <div>
+                  <dt id="summary-three-label">采样峰值</dt>
+                  <dd id="summary-three-value">46.1%</dd>
+                  <small id="summary-three-note">14:20 出现</small>
+                </div>
+                <div>
+                  <dt id="summary-four-label">峰值风险</dt>
+                  <dd id="summary-four-value" class="risk-low">低风险</dd>
+                  <small id="summary-four-note">低于 65% 阈值</small>
+                </div>
+              </dl>
+            </div>
+          </section>
+
+          <section class="status-banner" aria-label="整体状态">
+            <div class="status-symbol">
+              <svg aria-hidden="true" viewBox="0 0 24 24">
+                <path d="m9 12 2 2 4-4" />
+                <circle cx="12" cy="12" r="9" />
+              </svg>
+            </div>
+            <div>
+              <strong>主机运行稳定</strong
+              ><span>8 个受监控服务正常，连续运行 <b>17 天 4 小时</b></span>
+            </div>
+            <a href="#events"
+              >查看运行事件
+              <svg aria-hidden="true" viewBox="0 0 24 24">
+                <path d="M5 12h14M13 6l6 6-6 6" /></svg
+            ></a>
+          </section>
+
+          <section
+            class="section-block"
+            id="applications"
+            aria-labelledby="applications-title"
+          >
+            <div class="section-heading">
+              <div>
+                <span class="eyebrow">已纳管 3 个应用</span>
+                <h2 id="applications-title">应用运行状态</h2>
+              </div>
+              <button
+                class="text-button"
+                type="button"
+                data-demo-action="连接后可在这里登记应用、健康检查与部署适配器。"
+              >
+                管理应用
+                <svg aria-hidden="true" viewBox="0 0 24 24">
+                  <path d="M5 12h14M13 6l6 6-6 6" />
+                </svg>
+              </button>
+            </div>
+            <div class="applications-layout">
+              <div class="application-table-wrap">
+                <div class="application-table table-header" aria-hidden="true">
+                  <span>应用</span><span>状态</span><span>当前版本</span
+                  ><span>最近发布</span><span>访问</span><span></span>
+                </div>
+                <div class="application-table app-row is-selected">
+                  <button
+                    class="app-select"
+                    type="button"
+                    data-app="sub2api"
+                    aria-label="查看 Sub2API 应用详情"
+                  >
+                    <span class="app-name"
+                      ><span class="app-avatar app-blue">S</span
+                      ><span
+                        ><strong>Sub2API</strong
+                        ><small>Docker Compose · 3 个服务</small></span
+                      ></span
+                    >
+                  </button>
+                  <span class="status-pill is-healthy"><i></i>健康</span>
+                  <code>v2.4.1</code>
+                  <time datetime="2026-08-15T09:42:00+08:00">今天 09:42</time>
+                  <a
+                    class="quick-link"
+                    href="https://sub2api.example.com"
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label="打开 Sub2API"
+                    title="打开 Sub2API"
+                    ><svg aria-hidden="true" viewBox="0 0 24 24">
+                      <path
+                        d="M14 3h7v7M10 14 21 3M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5"
+                      /></svg
+                    ><span>打开</span></a
+                  >
+                  <span class="row-action" aria-hidden="true"
+                    ><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6" /></svg
+                  ></span>
+                </div>
+                <div class="application-table app-row">
+                  <button
+                    class="app-select"
+                    type="button"
+                    data-app="sub2api-cf"
+                    aria-label="查看 Sub2API Cloudflare Worker 详情"
+                  >
+                    <span class="app-name"
+                      ><span class="app-avatar app-orange">C</span
+                      ><span
+                        ><strong>Sub2API-CF</strong
+                        ><small>Cloudflare Worker · 1 个服务</small></span
+                      ></span
+                    >
+                  </button>
+                  <span class="status-pill is-healthy"><i></i>健康</span>
+                  <code>v1.8.0</code>
+                  <time datetime="2026-08-14T22:10:00+08:00">昨天 22:10</time>
+                  <a
+                    class="quick-link"
+                    href="https://sub2api-cf.example.com"
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label="打开 Sub2API-CF"
+                    title="打开 Sub2API-CF"
+                    ><svg aria-hidden="true" viewBox="0 0 24 24">
+                      <path
+                        d="M14 3h7v7M10 14 21 3M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5"
+                      /></svg
+                    ><span>打开</span></a
+                  >
+                  <span class="row-action" aria-hidden="true"
+                    ><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6" /></svg
+                  ></span>
+                </div>
+                <div class="application-table app-row">
+                  <button
+                    class="app-select"
+                    type="button"
+                    data-app="gateway"
+                    aria-label="查看 Nginx Gateway 应用详情"
+                  >
+                    <span class="app-name"
+                      ><span class="app-avatar app-green">N</span
+                      ><span
+                        ><strong>Nginx Gateway</strong
+                        ><small>systemd · 1 个服务</small></span
+                      ></span
+                    >
+                  </button>
+                  <span class="status-pill is-attention"><i></i>需关注</span>
+                  <code>1.26.1</code>
+                  <time datetime="2026-08-13T16:35:00+08:00">8 月 13 日</time>
+                  <a
+                    class="quick-link"
+                    href="https://gateway.example.com"
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label="打开 Nginx Gateway"
+                    title="打开 Nginx Gateway"
+                    ><svg aria-hidden="true" viewBox="0 0 24 24">
+                      <path
+                        d="M14 3h7v7M10 14 21 3M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1 2-2V5a2 2 0 0 1 2-2h5"
+                      /></svg
+                    ><span>打开</span></a
+                  >
+                  <span class="row-action" aria-hidden="true"
+                    ><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6" /></svg
+                  ></span>
+                </div>
+              </div>
+
+              <aside class="application-detail" aria-live="polite">
+                <div class="detail-topline">
+                  <span class="detail-label">应用详情</span
+                  ><button
+                    class="icon-button mini"
+                    id="detail-menu"
+                    type="button"
+                    aria-label="更多应用操作"
+                    title="更多操作"
+                  >
+                    <svg aria-hidden="true" viewBox="0 0 24 24">
+                      <circle cx="5" cy="12" r="1" />
+                      <circle cx="12" cy="12" r="1" />
+                      <circle cx="19" cy="12" r="1" />
+                    </svg>
+                  </button>
+                </div>
+                <div class="detail-app">
+                  <span class="app-avatar app-blue" id="detail-avatar">S</span>
+                  <div>
+                    <h3 id="detail-name">Sub2API</h3>
+                    <a
+                      id="detail-url"
+                      href="https://sub2api.example.com"
+                      target="_blank"
+                      rel="noreferrer"
+                      >sub2api.example.com
+                      <svg aria-hidden="true" viewBox="0 0 24 24">
+                        <path
+                          d="M14 3h7v7M10 14 21 3M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5"
+                        /></svg
+                    ></a>
+                  </div>
+                </div>
+                <dl class="detail-facts">
+                  <div>
+                    <dt>健康检查</dt>
+                    <dd>
+                      <span class="check-dot"></span
+                      ><span id="detail-check"
+                        >/health · 200 OK · 08:59:51</span
+                      >
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>资源占用</dt>
+                    <dd id="detail-resource">
+                      CPU 6.4% <span>·</span> 内存 684 MB
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>构建来源</dt>
+                    <dd>
+                      <code id="detail-commit">a8c32f1</code
+                      ><span id="detail-branch"> main</span>
+                    </dd>
+                  </div>
+                </dl>
+                <button
+                  class="secondary-button full-width"
+                  id="open-deployments"
+                  type="button"
+                >
+                  查看发布记录
+                  <svg aria-hidden="true" viewBox="0 0 24 24">
+                    <path d="M5 12h14M13 6l6 6-6 6" />
+                  </svg>
+                </button>
+              </aside>
+            </div>
+          </section>
+
+          <section
+            class="section-block"
+            id="deployments"
+            aria-labelledby="deployments-title"
+          >
+            <div class="section-heading">
+              <div>
+                <span class="eyebrow">Sub2API</span>
+                <h2 id="deployments-title">部署历史</h2>
+              </div>
+              <button class="primary-button" id="deploy-button" type="button">
+                <svg aria-hidden="true" viewBox="0 0 24 24">
+                  <path d="M12 3v12" />
+                  <path d="m7 8 5-5 5 5" />
+                  <path d="M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5" /></svg
+                >新建部署
+              </button>
+            </div>
+            <div class="deployments-table-wrap">
+              <table class="deployments-table">
+                <thead>
+                  <tr>
+                    <th>版本</th>
+                    <th>状态</th>
+                    <th>发布时间</th>
+                    <th>发布人</th>
+                    <th>部署耗时</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody id="deployment-list">
+                  <tr class="current-release">
+                    <td>
+                      <div class="release-cell">
+                        <code>v2.4.1</code><span>当前运行</span>
+                      </div>
+                      <small>a8c32f1 · api + worker</small>
+                    </td>
+                    <td>
+                      <span class="status-pill is-healthy"><i></i>已验证</span>
+                    </td>
+                    <td>
+                      <time datetime="2026-08-15T09:42:00+08:00"
+                        >今天 09:42</time
+                      >
+                    </td>
+                    <td>
+                      <span class="person"
+                        ><span class="person-avatar">Z</span>zero</span
+                      >
+                    </td>
+                    <td class="numeric">1m 16s</td>
+                    <td>
+                      <button class="quiet-button" type="button" disabled>
+                        当前版本
+                      </button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <div class="release-cell"><code>v2.4.0</code></div>
+                      <small>6e54ba9 · api + worker</small>
+                    </td>
+                    <td>
+                      <span class="status-pill is-healthy"><i></i>已验证</span>
+                    </td>
+                    <td>
+                      <time datetime="2026-08-13T21:27:00+08:00"
+                        >8 月 13 日 21:27</time
+                      >
+                    </td>
+                    <td>
+                      <span class="person"
+                        ><span class="person-avatar">Z</span>zero</span
+                      >
+                    </td>
+                    <td class="numeric">1m 08s</td>
+                    <td>
+                      <button
+                        class="rollback-button"
+                        type="button"
+                        data-version="v2.4.0"
+                        data-commit="6e54ba9"
+                      >
+                        回滚至此版本
+                      </button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <div class="release-cell"><code>v2.3.9</code></div>
+                      <small>f19d8d2 · api + worker</small>
+                    </td>
+                    <td>
+                      <span class="status-pill is-rolled-back"
+                        ><i></i>已回滚</span
+                      >
+                    </td>
+                    <td>
+                      <time datetime="2026-08-10T14:05:00+08:00"
+                        >8 月 10 日 14:05</time
+                      >
+                    </td>
+                    <td>
+                      <span class="person"
+                        ><span class="person-avatar">Z</span>zero</span
+                      >
+                    </td>
+                    <td class="numeric">1m 22s</td>
+                    <td>
+                      <button
+                        class="rollback-button"
+                        type="button"
+                        data-version="v2.3.9"
+                        data-commit="f19d8d2"
+                      >
+                        回滚至此版本
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="lower-grid">
+            <section
+              class="section-block compact-block"
+              id="services"
+              aria-labelledby="services-title"
+            >
+              <div class="section-heading">
+                <div>
+                  <span class="eyebrow">进程与容器</span>
+                  <h2 id="services-title">服务状态</h2>
+                </div>
+                <button
+                  class="text-button"
+                  type="button"
+                  data-demo-action="服务详情页将展示日志、端口、重启历史和资源趋势。"
+                >
+                  查看全部
+                  <svg aria-hidden="true" viewBox="0 0 24 24">
+                    <path d="M5 12h14M13 6l6 6-6 6" />
+                  </svg>
+                </button>
+              </div>
+              <ul class="service-list">
+                <li>
+                  <span class="service-health is-healthy"></span>
+                  <div>
+                    <strong>sub2api-api</strong
+                    ><span>Docker · 已运行 17 天</span>
+                  </div>
+                  <code>184 MB</code
+                  ><a
+                    class="quick-link service-link"
+                    href="https://sub2api.example.com"
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label="打开 sub2api-api"
+                    ><svg aria-hidden="true" viewBox="0 0 24 24">
+                      <path
+                        d="M14 3h7v7M10 14 21 3M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5"
+                      /></svg
+                    ><span>打开</span></a
+                  >
+                </li>
+                <li>
+                  <span class="service-health is-healthy"></span>
+                  <div>
+                    <strong>sub2api-worker</strong
+                    ><span>Docker · 已运行 17 天</span>
+                  </div>
+                  <code>96 MB</code
+                  ><a
+                    class="quick-link service-link"
+                    href="https://sub2api.example.com/worker"
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label="打开 sub2api-worker"
+                    ><svg aria-hidden="true" viewBox="0 0 24 24">
+                      <path
+                        d="M14 3h7v7M10 14 21 3M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5"
+                      /></svg
+                    ><span>打开</span></a
+                  >
+                </li>
+                <li>
+                  <span class="service-health is-healthy"></span>
+                  <div>
+                    <strong>nginx</strong><span>systemd · 已运行 31 天</span>
+                  </div>
+                  <code>22 MB</code
+                  ><a
+                    class="quick-link service-link"
+                    href="https://gateway.example.com"
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label="打开 nginx 服务地址"
+                    ><svg aria-hidden="true" viewBox="0 0 24 24">
+                      <path
+                        d="M14 3h7v7M10 14 21 3M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5"
+                      /></svg
+                    ><span>打开</span></a
+                  >
+                </li>
+                <li>
+                  <span class="service-health is-attention"></span>
+                  <div>
+                    <strong>backup-sync</strong
+                    ><span>systemd · 上次运行失败</span>
+                  </div>
+                  <code>--</code
+                  ><a
+                    class="quick-link service-link"
+                    href="https://backup.example.com"
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label="打开 backup-sync 服务地址"
+                    ><svg aria-hidden="true" viewBox="0 0 24 24">
+                      <path
+                        d="M14 3h7v7M10 14 21 3M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5"
+                      /></svg
+                    ><span>打开</span></a
+                  >
+                </li>
+              </ul>
+            </section>
+            <section
+              class="section-block compact-block"
+              id="events"
+              aria-labelledby="events-title"
+            >
+              <div class="section-heading">
+                <div>
+                  <span class="eyebrow">最近 24 小时</span>
+                  <h2 id="events-title">运行事件</h2>
+                </div>
+                <button
+                  class="text-button"
+                  type="button"
+                  data-demo-action="完整事件页将支持按应用、级别和时间筛选。"
+                >
+                  全部事件
+                  <svg aria-hidden="true" viewBox="0 0 24 24">
+                    <path d="M5 12h14M13 6l6 6-6 6" />
+                  </svg>
+                </button>
+              </div>
+              <ol class="event-list">
+                <li>
+                  <span class="event-icon success"
+                    ><svg aria-hidden="true" viewBox="0 0 24 24">
+                      <path d="m8 12 2.5 2.5L16 9" /></svg
+                  ></span>
+                  <div>
+                    <strong>Sub2API v2.4.1 部署验证通过</strong
+                    ><span>09:43 · 健康检查响应 200</span>
+                  </div>
+                </li>
+                <li>
+                  <span class="event-icon info"
+                    ><svg aria-hidden="true" viewBox="0 0 24 24">
+                      <path d="M12 8v4l2.5 2.5" />
+                      <circle cx="12" cy="12" r="8" /></svg
+                  ></span>
+                  <div>
+                    <strong>系统备份已完成</strong
+                    ><span>03:00 · 归档 1.2 GB</span>
+                  </div>
+                </li>
+                <li>
+                  <span class="event-icon warning"
+                    ><svg aria-hidden="true" viewBox="0 0 24 24">
+                      <path d="M12 9v4M12 17h.01" />
+                      <path
+                        d="M10.3 3.8 2.9 17a2 2 0 0 0 1.74 3h14.72a2 2 0 0 0 1.74-3L13.7 3.8a2 2 0 0 0-3.4 0Z"
+                      /></svg
+                  ></span>
+                  <div>
+                    <strong>backup-sync 执行失败</strong
+                    ><span>昨天 02:31 · 连接目标主机超时</span>
+                  </div>
+                </li>
+              </ol>
+            </section>
+          </section>
+        </main>
+      </div>
+    </div>
+
+    <dialog
+      class="range-data-dialog"
+      id="range-data-dialog"
+      aria-labelledby="range-data-title"
+    >
+      <form method="dialog">
+        <button
+          class="dialog-close"
+          value="cancel"
+          aria-label="关闭采样明细"
+          type="submit"
+        >
+          <svg aria-hidden="true" viewBox="0 0 24 24">
+            <path d="m6 6 12 12M18 6 6 18" />
+          </svg>
+        </button>
+        <span class="eyebrow">主机指标采样</span>
+        <h2 id="range-data-title">
+          <span id="range-data-title-period">24 小时</span> 数据明细
+        </h2>
+        <p id="range-data-description">
+          展示该范围内按 15 分钟归集的代表性采样点。
+        </p>
+        <div class="range-data-meta">
+          <span id="range-data-count">96 条记录</span
+          ><span id="range-data-retention">保留周期：30 天</span>
+        </div>
+        <div class="range-data-table-wrap">
+          <table class="range-data-table">
+            <thead>
+              <tr>
+                <th>时间</th>
+                <th>CPU</th>
+                <th>内存</th>
+                <th>磁盘</th>
+                <th>网络出站</th>
+              </tr>
+            </thead>
+            <tbody id="range-data-list"></tbody>
+          </table>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog
+      class="rollback-dialog"
+      id="rollback-dialog"
+      aria-labelledby="rollback-title"
+    >
+      <form method="dialog" id="rollback-form">
+        <button
+          class="dialog-close"
+          value="cancel"
+          aria-label="关闭回滚确认"
+          type="submit"
+        >
+          <svg aria-hidden="true" viewBox="0 0 24 24">
+            <path d="m6 6 12 12M18 6 6 18" />
+          </svg>
+        </button>
+        <div class="dialog-icon">
+          <svg aria-hidden="true" viewBox="0 0 24 24">
+            <path d="M3 12a9 9 0 1 0 3-6.7L3 8" />
+            <path d="M3 3v5h5" />
+          </svg>
+        </div>
+        <p class="eyebrow">生产环境操作</p>
+        <h2 id="rollback-title">回滚 <span id="rollback-app">Sub2API</span></h2>
+        <p>
+          将从当前 <code id="rollback-current">v2.4.1</code> 切换至
+          <code id="rollback-version">v2.4.0</code
+          >。系统会等待健康检查通过；失败时将自动恢复当前版本。
+        </p>
+        <div class="rollback-scope">
+          <span>回滚版本</span
+          ><strong id="rollback-commit">v2.4.0 · 6e54ba9</strong>
+        </div>
+        <label for="confirm-input">输入 <code>ROLLBACK</code> 以确认</label>
+        <input
+          id="confirm-input"
+          name="confirmation"
+          autocomplete="off"
+          spellcheck="false"
+          placeholder="ROLLBACK"
+        />
+        <div class="dialog-actions">
+          <button class="secondary-button" value="cancel" type="submit">
+            取消</button
+          ><button
+            class="danger-button"
+            id="confirm-rollback"
+            type="button"
+            disabled
+          >
+            确认回滚
+          </button>
+        </div>
+      </form>
+    </dialog>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="app.js"></script>
+  </body>
+</html>
