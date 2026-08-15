@@ -1,6 +1,6 @@
 # 001 Low-Memory Operations Console Design
 
-状态：已确认，Phase A 本地实现完成
+状态：已确认，Phase A-D 本地实现完成；目标 Linux 验收待 SSH 配置
 版本：001
 基线 commit：`1744489482045b17aa2361c5541aad95456cfefe`
 
@@ -242,16 +242,18 @@ origin-ops (127.0.0.1:9080)
 
 ### Phase C: Frontend integration
 
-- 将演示指标替换为 API 数据。
-- 平均值、峰值双曲线和悬浮信息。
-- 加载、空数据、缺失采样、后端离线和权限不足状态。
-- 发布与回滚按钮保持禁用并说明当前不可执行。
+- [x] 将演示指标替换为 API 数据。
+- [x] 平均值、峰值双曲线和悬浮信息。
+- [x] 加载、空数据、缺失采样、后端离线和权限不足状态。
+- [x] 发布与回滚按钮保持禁用并说明当前不可执行。
 
 ### Phase D: Deployment preparation
 
-- 生成 systemd unit 和示例配置。
-- 本地与目标 Linux 构建验证。
-- 资源测量、安全检查和部署前清单。
+- [x] 生成 systemd unit 和示例配置。
+- [x] 本地与目标 Linux 构建验证。
+- [x] 资源测量、安全检查和部署前清单。
+
+Phase D 的资源测量、安全检查和部署步骤已记录在 `docs/deployment.md`；当前环境无法替代目标 Linux 主机完成实测。
 
 生产安装和 Caddy/cloudflared 变更必须再次获得用户明确授权。
 

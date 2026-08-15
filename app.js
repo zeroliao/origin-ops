@@ -1,275 +1,3 @@
-const applications = {
-  sub2api: {
-    name: "Sub2API",
-    version: "v2.4.1",
-    avatar: "S",
-    avatarClass: "app-blue",
-    url: "sub2api.example.com",
-    check: "/health · 200 OK · 08:59:51",
-    resource: "CPU 6.4% · 内存 684 MB",
-    commit: "a8c32f1",
-    branch: "main",
-  },
-  "sub2api-cf": {
-    name: "Sub2API-CF",
-    version: "v1.8.0",
-    avatar: "C",
-    avatarClass: "app-orange",
-    url: "sub2api-cf.example.com",
-    check: "/status · 200 OK · 08:59:46",
-    resource: "边缘请求 1,284/min · 错误率 0.02%",
-    commit: "c37d10a",
-    branch: "main",
-  },
-  gateway: {
-    name: "Nginx Gateway",
-    version: "1.26.1",
-    avatar: "N",
-    avatarClass: "app-green",
-    url: "gateway.example.com",
-    check: "/health · 200 OK · 08:59:43",
-    resource: "CPU 0.8% · 内存 22 MB",
-    commit: "1.26.1",
-    branch: "systemd",
-  },
-};
-
-const deploymentHistory = {
-  sub2api: [
-    {
-      version: "v2.4.1",
-      commit: "a8c32f1 · api + worker",
-      status: "已验证",
-      statusClass: "is-healthy",
-      time: "今天 09:42",
-      duration: "1m 16s",
-      current: true,
-    },
-    {
-      version: "v2.4.0",
-      commit: "6e54ba9 · api + worker",
-      status: "已验证",
-      statusClass: "is-healthy",
-      time: "8 月 13 日 21:27",
-      duration: "1m 08s",
-      rollbackCommit: "6e54ba9",
-    },
-    {
-      version: "v2.3.9",
-      commit: "f19d8d2 · api + worker",
-      status: "已回滚",
-      statusClass: "is-rolled-back",
-      time: "8 月 10 日 14:05",
-      duration: "1m 22s",
-      rollbackCommit: "f19d8d2",
-    },
-  ],
-  "sub2api-cf": [
-    {
-      version: "v1.8.0",
-      commit: "c37d10a · worker bundle",
-      status: "已验证",
-      statusClass: "is-healthy",
-      time: "昨天 22:10",
-      duration: "34s",
-      current: true,
-    },
-    {
-      version: "v1.7.9",
-      commit: "0d41cab · worker bundle",
-      status: "已验证",
-      statusClass: "is-healthy",
-      time: "8 月 11 日 18:02",
-      duration: "31s",
-      rollbackCommit: "0d41cab",
-    },
-    {
-      version: "v1.7.8",
-      commit: "bb6428e · worker bundle",
-      status: "已验证",
-      statusClass: "is-healthy",
-      time: "8 月 05 日 11:46",
-      duration: "29s",
-      rollbackCommit: "bb6428e",
-    },
-  ],
-  gateway: [
-    {
-      version: "1.26.1",
-      commit: "nginx:1.26.1 · systemd",
-      status: "需关注",
-      statusClass: "is-attention",
-      time: "8 月 13 日 16:35",
-      duration: "9s",
-      current: true,
-    },
-    {
-      version: "1.26.0",
-      commit: "nginx:1.26.0 · systemd",
-      status: "已验证",
-      statusClass: "is-healthy",
-      time: "7 月 26 日 13:20",
-      duration: "10s",
-      rollbackCommit: "nginx:1.26.0",
-    },
-    {
-      version: "1.25.5",
-      commit: "nginx:1.25.5 · systemd",
-      status: "已验证",
-      statusClass: "is-healthy",
-      time: "7 月 04 日 08:46",
-      duration: "11s",
-      rollbackCommit: "nginx:1.25.5",
-    },
-  ],
-};
-
-const rangeData = {
-  "1h": {
-    label: "1 小时",
-    count: "12 条采样记录",
-    cadence: "每 5 分钟",
-    axis: ["11:00", "11:30", "现在"],
-    metrics: {
-      cpu: {
-        label: "CPU 使用率",
-        current: "24.6%",
-        color: "#1e68cf",
-        values: [19, 22, 18, 27, 24, 31, 26, 23, 28, 21, 25, 24],
-      },
-      memory: {
-        label: "内存使用",
-        current: "2.86 GB",
-        color: "#117a70",
-        values: [
-          2.72, 2.73, 2.74, 2.78, 2.8, 2.81, 2.8, 2.83, 2.85, 2.84, 2.86, 2.86,
-        ],
-      },
-      network: {
-        label: "网络出站",
-        current: "4.1 MB/s",
-        color: "#6b5fc7",
-        values: [3.1, 3.4, 2.8, 4.6, 4.1, 5.2, 3.9, 4.7, 3.6, 4.3, 4.4, 4.1],
-      },
-    },
-    summary: [
-      ["平均 CPU", "23.7%", "较前 1 小时 +1.2%"],
-      ["峰值", "31.0%", "11:25 出现"],
-      ["内存变化", "+142 MB", "区间起止对比"],
-      ["磁盘增长", "+18 MB", "持续监控中"],
-    ],
-    details: [
-      ["11:00", "19.0%", "2.72 GB", "43.18 GB", "3.1 MB/s"],
-      ["11:10", "18.0%", "2.74 GB", "43.19 GB", "2.8 MB/s"],
-      ["11:20", "24.0%", "2.80 GB", "43.19 GB", "4.1 MB/s"],
-      ["11:30", "31.0%", "2.81 GB", "43.20 GB", "5.2 MB/s"],
-      ["11:40", "23.0%", "2.83 GB", "43.20 GB", "4.7 MB/s"],
-      ["11:50", "25.0%", "2.86 GB", "43.20 GB", "4.4 MB/s"],
-      ["现在", "24.6%", "2.86 GB", "43.20 GB", "4.1 MB/s"],
-    ],
-  },
-  "24h": {
-    label: "24 小时",
-    count: "96 条采样记录",
-    cadence: "每 15 分钟",
-    axis: ["昨天 12:00", "00:00", "现在"],
-    metrics: {
-      cpu: {
-        label: "CPU 使用率",
-        current: "23.8%",
-        color: "#1e68cf",
-        values: [
-          17, 23, 21, 29, 25, 19, 27, 31, 24, 38, 33, 27, 36, 42, 29, 24, 34,
-          28, 46, 35, 31, 39, 26, 24,
-        ],
-      },
-      memory: {
-        label: "内存使用",
-        current: "2.81 GB",
-        color: "#117a70",
-        values: [
-          2.63, 2.64, 2.66, 2.67, 2.68, 2.7, 2.72, 2.71, 2.73, 2.75, 2.74, 2.77,
-          2.78, 2.8, 2.79, 2.8, 2.82, 2.84, 2.83, 2.82, 2.8, 2.81, 2.8, 2.81,
-        ],
-      },
-      network: {
-        label: "网络出站",
-        current: "3.8 MB/s",
-        color: "#6b5fc7",
-        values: [
-          2.1, 2.8, 1.9, 3.2, 3.8, 2.5, 3.1, 4.4, 2.9, 5.1, 4.3, 3.7, 5.4, 4.7,
-          3.6, 4.9, 3.1, 6.2, 4.8, 3.9, 5.3, 3.7, 4.2, 3.8,
-        ],
-      },
-    },
-    summary: [
-      ["平均 CPU", "22.6%", "较上个周期 -3.4%"],
-      ["峰值", "46.1%", "14:20 出现"],
-      ["内存变化", "+128 MB", "区间起止对比"],
-      ["磁盘增长", "+0.6 GB", "持续监控中"],
-    ],
-    details: [
-      ["昨天 12:00", "17.2%", "2.63 GB", "42.60 GB", "2.1 MB/s"],
-      ["昨天 16:00", "25.1%", "2.68 GB", "42.71 GB", "3.8 MB/s"],
-      ["昨天 20:00", "19.4%", "2.72 GB", "42.84 GB", "2.5 MB/s"],
-      ["00:00", "31.3%", "2.75 GB", "42.93 GB", "5.1 MB/s"],
-      ["04:00", "24.2%", "2.79 GB", "43.01 GB", "3.6 MB/s"],
-      ["08:00", "38.7%", "2.83 GB", "43.12 GB", "5.3 MB/s"],
-      ["现在", "23.8%", "2.81 GB", "43.20 GB", "3.8 MB/s"],
-    ],
-  },
-  "7d": {
-    label: "7 天",
-    count: "336 条采样记录",
-    cadence: "每 30 分钟",
-    axis: ["8 月 08 日", "8 月 11 日", "现在"],
-    metrics: {
-      cpu: {
-        label: "CPU 使用率",
-        current: "20.1%",
-        color: "#1e68cf",
-        values: [
-          15, 19, 27, 22, 18, 31, 24, 21, 34, 28, 25, 20, 37, 29, 22, 18, 33,
-          26, 19, 30, 23, 17, 28, 20,
-        ],
-      },
-      memory: {
-        label: "内存使用",
-        current: "2.74 GB",
-        color: "#117a70",
-        values: [
-          2.45, 2.47, 2.49, 2.52, 2.55, 2.57, 2.6, 2.62, 2.64, 2.66, 2.68, 2.69,
-          2.7, 2.71, 2.72, 2.73, 2.73, 2.74, 2.74, 2.75, 2.74, 2.74, 2.73, 2.74,
-        ],
-      },
-      network: {
-        label: "网络出站",
-        current: "3.4 MB/s",
-        color: "#6b5fc7",
-        values: [
-          2.3, 2.7, 3.1, 2.5, 3.8, 3.2, 2.9, 4.1, 3.3, 2.8, 4.4, 3.7, 3.1, 4.6,
-          3.8, 3.2, 4.3, 3.5, 2.9, 4.0, 3.1, 2.6, 3.7, 3.4,
-        ],
-      },
-    },
-    summary: [
-      ["平均 CPU", "21.8%", "较上个 7 天 -1.8%"],
-      ["峰值", "37.4%", "8 月 12 日出现"],
-      ["内存变化", "+294 MB", "区间起止对比"],
-      ["磁盘增长", "+3.8 GB", "持续监控中"],
-    ],
-    details: [
-      ["8 月 08 日", "15.3%", "2.45 GB", "39.40 GB", "2.3 MB/s"],
-      ["8 月 09 日", "27.0%", "2.52 GB", "39.92 GB", "3.1 MB/s"],
-      ["8 月 10 日", "18.4%", "2.60 GB", "40.48 GB", "3.8 MB/s"],
-      ["8 月 11 日", "34.1%", "2.66 GB", "41.15 GB", "4.4 MB/s"],
-      ["8 月 12 日", "37.4%", "2.70 GB", "41.89 GB", "4.6 MB/s"],
-      ["8 月 13 日", "22.8%", "2.73 GB", "42.61 GB", "3.7 MB/s"],
-      ["现在", "20.1%", "2.74 GB", "43.20 GB", "3.4 MB/s"],
-    ],
-  },
-};
-
 const pageLabels = {
   overview: "总览",
   applications: "应用",
@@ -277,14 +5,36 @@ const pageLabels = {
   deployments: "发布记录",
   events: "通知",
 };
-let selectedApp = "sub2api";
-let activeRange;
+
+const metricDefinitions = {
+  cpu: { label: "CPU 使用率", color: "#1e68cf", unit: "%" },
+  memory: { label: "内存使用率", color: "#117a70", unit: "%" },
+  network: { label: "网络出站", color: "#6b5fc7", unit: " MB/s" },
+};
+
+let applications = [];
+let selectedAppID = null;
+let activeRange = null;
 let selectedTrendMetric = "cpu";
-let activeChartBounds;
+let activeChartBounds = null;
 let toastTimeout;
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
+
+function escapeHTML(value) {
+  return String(value).replace(
+    /[&<>'"]/g,
+    (character) =>
+      ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        "'": "&#39;",
+        '"': "&quot;",
+      })[character],
+  );
+}
 
 function showToast(message, isError = false) {
   const toast = $("#toast");
@@ -294,135 +44,22 @@ function showToast(message, isError = false) {
   window.clearTimeout(toastTimeout);
   toastTimeout = window.setTimeout(
     () => toast.classList.remove("is-visible"),
-    3200,
+    3600,
   );
 }
 
-function getChartBounds(metricKey, values) {
-  let minimum = Math.min(...values);
-  let maximum = Math.max(...values);
-  if (metricKey === "memory") {
-    minimum = Math.floor(minimum * 10) / 10;
-    maximum = Math.ceil(maximum * 10) / 10;
-    if (maximum - minimum < 0.3) {
-      minimum -= 0.1;
-      maximum += 0.1;
-    }
+async function requestJSON(path) {
+  const response = await fetch(path, {
+    headers: { Accept: "application/json" },
+  });
+  let payload = null;
+  try {
+    payload = await response.json();
+  } catch {
+    throw new Error("后端返回了无效响应");
   }
-  return { minimum, maximum };
-}
-
-function toChartPoints(
-  values,
-  bounds = getChartBounds(selectedTrendMetric, values),
-) {
-  const width = 672;
-  const startX = 24;
-  const top = 24;
-  const bottom = 156;
-  const span = Math.max(bounds.maximum - bounds.minimum, 1);
-  return values.map((value, index) => {
-    const x = startX + (width * index) / (values.length - 1);
-    const y = top + ((bounds.maximum - value) / span) * (bottom - top);
-    return [Number(x.toFixed(1)), Number(y.toFixed(1))];
-  });
-}
-
-function renderTrendYAxis(metricKey, values) {
-  const leftAxis = $("#trend-y-axis-left");
-  const rightAxis = $("#trend-y-axis-right");
-  const stage = $("#chart-stage");
-  const showMemoryAxes = metricKey === "memory";
-  stage.classList.toggle("has-dual-axis", showMemoryAxes);
-  leftAxis.hidden = !showMemoryAxes;
-  rightAxis.hidden = !showMemoryAxes;
-  if (!showMemoryAxes) return;
-
-  const ticks = Array.from(
-    { length: 4 },
-    (_, index) =>
-      activeChartBounds.maximum -
-      ((activeChartBounds.maximum - activeChartBounds.minimum) * index) / 3,
-  );
-  leftAxis.innerHTML = ticks
-    .map((value) => `<span>${value.toFixed(2)} GB</span>`)
-    .join("");
-  rightAxis.innerHTML = ticks
-    .map((value) => `<span>${Math.round((value / 8) * 100)}%</span>`)
-    .join("");
-}
-
-function hideTrendTooltip() {
-  $("#chart-tooltip").hidden = true;
-  $("#trend-hover-guide").classList.remove("is-visible");
-  $("#trend-hover-point").classList.remove("is-visible");
-}
-
-function showTrendTooltip(index) {
-  const range = activeRange;
-  const metric = range.metrics[selectedTrendMetric];
-  const values = metric.values;
-  const safeIndex = Math.max(0, Math.min(index, values.length - 1));
-  const points = toChartPoints(values, activeChartBounds);
-  const [x, y] = points[safeIndex];
-  const time = new Date(
-    range.start.getTime() +
-      (range.end.getTime() - range.start.getTime()) *
-        (safeIndex / (values.length - 1)),
-  );
-  const value = values[safeIndex];
-  const detail =
-    selectedTrendMetric === "memory"
-      ? `${formatMetricValue("memory", value)} (${Math.round((value / 8) * 100)}%)`
-      : formatMetricValue(selectedTrendMetric, value);
-  const tooltip = $("#chart-tooltip");
-
-  $("#trend-hover-guide").setAttribute("x1", x);
-  $("#trend-hover-guide").setAttribute("x2", x);
-  $("#trend-hover-point").setAttribute("cx", x);
-  $("#trend-hover-point").setAttribute("cy", y);
-  $("#trend-hover-guide").classList.add("is-visible");
-  $("#trend-hover-point").classList.add("is-visible");
-  tooltip.style.setProperty("--tooltip-x", `${(x / 720) * 100}%`);
-  tooltip.style.setProperty("--tooltip-y", `${(y / 180) * 100}%`);
-  tooltip.classList.toggle("is-below", y < 72);
-  tooltip.innerHTML = `<strong>${formatDateTime(time)}</strong><span>${metric.label} ${detail}</span>`;
-  tooltip.hidden = false;
-}
-
-function getTrendIndexFromPointer(event) {
-  const chart = $("#trend-chart");
-  const values = activeRange.metrics[selectedTrendMetric].values;
-  const bounds = chart.getBoundingClientRect();
-  const chartX = ((event.clientX - bounds.left) / bounds.width) * 720;
-  const ratio = Math.max(0, Math.min(1, (chartX - 24) / 672));
-  return Math.round(ratio * (values.length - 1));
-}
-
-function bindTrendChartInteractions() {
-  const chart = $("#trend-chart");
-  let keyboardIndex = 0;
-  chart.addEventListener("pointermove", (event) =>
-    showTrendTooltip(getTrendIndexFromPointer(event)),
-  );
-  chart.addEventListener("pointerdown", (event) =>
-    showTrendTooltip(getTrendIndexFromPointer(event)),
-  );
-  chart.addEventListener("pointerleave", hideTrendTooltip);
-  chart.addEventListener("focus", () => showTrendTooltip(keyboardIndex));
-  chart.addEventListener("blur", hideTrendTooltip);
-  chart.addEventListener("keydown", (event) => {
-    const values = activeRange.metrics[selectedTrendMetric].values;
-    if (event.key === "Home") keyboardIndex = 0;
-    else if (event.key === "End") keyboardIndex = values.length - 1;
-    else if (event.key === "ArrowLeft")
-      keyboardIndex = Math.max(0, keyboardIndex - 1);
-    else if (event.key === "ArrowRight")
-      keyboardIndex = Math.min(values.length - 1, keyboardIndex + 1);
-    else return;
-    event.preventDefault();
-    showTrendTooltip(keyboardIndex);
-  });
+  if (!response.ok) throw new Error(payload.error || "请求失败");
+  return payload;
 }
 
 function pad(value) {
@@ -433,158 +70,308 @@ function formatDateInput(date) {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
-function formatDateTime(date) {
+function formatDateTime(value) {
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return "未知时间";
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
-function formatAxisDate(date) {
+function formatAxisDate(value) {
+  const date = value instanceof Date ? value : new Date(value);
   return `${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
+function formatBytes(bytes) {
+  if (!Number.isFinite(bytes)) return "--";
+  return `${(bytes / 1024 ** 3).toFixed(2)} GB`;
+}
+
 function formatMetricValue(metricKey, value) {
-  if (metricKey === "cpu") return `${value.toFixed(1)}%`;
-  if (metricKey === "memory") return `${value.toFixed(2)} GB`;
-  return `${value.toFixed(1)} MB/s`;
+  if (!Number.isFinite(value)) return "--";
+  return `${value.toFixed(metricKey === "network" ? 2 : 1)}${metricDefinitions[metricKey].unit}`;
 }
 
 function formatMetricChange(metricKey, value) {
-  const sign = value >= 0 ? "+" : "";
-  return `${sign}${formatMetricValue(metricKey, value)}`;
+  if (!Number.isFinite(value)) return "--";
+  return `${value >= 0 ? "+" : ""}${formatMetricValue(metricKey, value)}`;
 }
 
-function resolveTemplateKey(durationMinutes) {
-  if (durationMinutes <= 90) return "1h";
-  if (durationMinutes <= 48 * 60) return "24h";
-  return "7d";
+function percentage(used, total) {
+  return total > 0 ? (used / total) * 100 : 0;
 }
 
-function resolveCadence(durationMinutes) {
-  if (durationMinutes <= 6 * 60) return 5;
-  if (durationMinutes <= 48 * 60) return 15;
-  return 30;
+function setDataBadge(label, isError = false) {
+  const badge = $("#data-source-badge");
+  badge.lastChild.textContent = label;
+  badge.classList.toggle("is-error", isError);
 }
 
-function interpolateValue(values, ratio) {
-  const index = Math.round(ratio * (values.length - 1));
-  return values[index];
+function samplerMessage(lastError) {
+  if (!lastError) return "等待首个采样";
+  if (lastError.includes("supported only on Linux"))
+    return "当前运行环境不支持 Linux 指标采集";
+  return lastError.length > 72
+    ? "采集失败，详见服务日志"
+    : `采集失败：${lastError}`;
 }
 
-function buildRange(start, end) {
-  const durationMinutes = Math.round((end.getTime() - start.getTime()) / 60000);
-  const template = rangeData[resolveTemplateKey(durationMinutes)];
-  const cadenceMinutes = resolveCadence(durationMinutes);
-  const count = Math.floor(durationMinutes / cadenceMinutes) + 1;
-  const ratios = [0, 1 / 6, 2 / 6, 3 / 6, 4 / 6, 5 / 6, 1];
-  const startDisk = Math.max(38, 43.2 - durationMinutes / 4200);
-  const details = ratios.map((ratio) => {
-    const sampleTime = new Date(
-      start.getTime() + (end.getTime() - start.getTime()) * ratio,
-    );
-    const cpu = interpolateValue(template.metrics.cpu.values, ratio);
-    const memory = interpolateValue(template.metrics.memory.values, ratio);
-    const network = interpolateValue(template.metrics.network.values, ratio);
-    const disk = startDisk + (43.2 - startDisk) * ratio;
-    return [
-      formatDateTime(sampleTime),
-      formatMetricValue("cpu", cpu),
-      formatMetricValue("memory", memory),
-      `${disk.toFixed(2)} GB`,
-      formatMetricValue("network", network),
-    ];
-  });
+function setOverviewUnavailable(message, hostname = "后端离线") {
+  $("#host-name").textContent = hostname;
+  ["#cpu-value", "#memory-value", "#disk-value", "#network-value"].forEach(
+    (selector) => {
+      $(selector).textContent = "--";
+    },
+  );
+  $("#cpu-change").textContent = message;
+  $("#cpu-change").className = "change";
+  $("#memory-total").textContent = "/ --";
+  $("#disk-total").textContent = "/ --";
+  $("#memory-progress").value = 0;
+  $("#disk-progress").value = 0;
+  $("#cpu-caption").textContent = message;
+  $("#memory-caption").textContent = message;
+  $("#disk-caption").textContent = message;
+  $("#network-change").textContent = message;
+  $("#network-change").className = "change";
+  $("#network-caption").textContent = message;
+  $("#server-time").textContent = "数据不可用";
+  $("#server-time").removeAttribute("datetime");
+  $("#current-metrics-time").textContent = "数据不可用";
+  $("#current-metrics-time").removeAttribute("datetime");
+  $("#overall-status-title").textContent = "主机指标不可用";
+  $("#overall-status-note").textContent = message;
+  $("#status-banner").className = "status-banner is-error";
+}
 
+function renderOverview(payload) {
+  const host = payload.host || {};
+  const sampler = payload.sampler || {};
+  $("#host-name").textContent = host.hostname || "未知主机";
+  if (!sampler.hasLatest) {
+    const message = samplerMessage(sampler.lastError);
+    setOverviewUnavailable(message, host.hostname || "未知主机");
+    return;
+  }
+
+  const snapshot = sampler.latest;
+  const memoryPercent = percentage(
+    snapshot.memoryUsedBytes,
+    snapshot.memoryTotalBytes,
+  );
+  const diskPercent = percentage(
+    snapshot.diskUsedBytes,
+    snapshot.diskTotalBytes,
+  );
+  const latestTime = new Date(snapshot.time);
+  $("#server-time").textContent = formatDateTime(latestTime);
+  $("#server-time").dateTime = snapshot.time;
+  $("#current-metrics-time").textContent =
+    `更新于 ${formatDateTime(latestTime)}`;
+  $("#current-metrics-time").dateTime = snapshot.time;
+  $("#cpu-value").textContent = formatMetricValue("cpu", snapshot.cpuPercent);
+  $("#cpu-change").textContent = "实时采样";
+  $("#cpu-change").className = "change is-good";
+  $("#cpu-caption").textContent =
+    `${host.cpuCount || "--"} vCPU · Load ${Number(snapshot.load1 || 0).toFixed(2)}`;
+  $("#memory-value").textContent = formatBytes(snapshot.memoryUsedBytes);
+  $("#memory-total").textContent =
+    `/ ${formatBytes(snapshot.memoryTotalBytes)}`;
+  $("#memory-progress").value = memoryPercent;
+  $("#memory-progress").setAttribute(
+    "aria-label",
+    `内存使用率 ${memoryPercent.toFixed(1)}%`,
+  );
+  $("#memory-caption").textContent = `使用率 ${memoryPercent.toFixed(1)}%`;
+  $("#disk-value").textContent = formatBytes(snapshot.diskUsedBytes);
+  $("#disk-total").textContent = `/ ${formatBytes(snapshot.diskTotalBytes)}`;
+  $("#disk-progress").value = diskPercent;
+  $("#disk-progress").setAttribute(
+    "aria-label",
+    `磁盘使用率 ${diskPercent.toFixed(1)}%`,
+  );
+  $("#disk-caption").textContent = `使用率 ${diskPercent.toFixed(1)}%`;
+  $("#network-value").textContent = formatMetricValue(
+    "network",
+    snapshot.txBytesPerSecond / 1024 ** 2,
+  );
+  $("#network-change").textContent =
+    `入站 ${(snapshot.rxBytesPerSecond / 1024 ** 2).toFixed(2)} MB/s`;
+  $("#network-change").className = "change is-good";
+  $("#network-caption").textContent = "最近一次采样速率";
+  $("#overall-status-title").textContent = "主机正在采样";
+  $("#overall-status-note").textContent =
+    `${host.os || "未知系统"}/${host.arch || "未知架构"} · 最近采样 ${formatDateTime(latestTime)}`;
+  $("#status-banner").className = "status-banner is-healthy";
+}
+
+function metricValues(bucket, key) {
+  if (key === "cpu") return bucket.avg.cpuPercent;
+  if (key === "memory") return bucket.avg.memoryPercent;
+  return bucket.avg.txBytesPerSecond / 1024 ** 2;
+}
+
+function metricPeakValues(bucket, key) {
+  if (key === "cpu") return bucket.max.cpuPercent;
+  if (key === "memory") return bucket.max.memoryPercent;
+  return bucket.max.txBytesPerSecond / 1024 ** 2;
+}
+
+function buildRange(payload) {
+  const buckets = (payload.buckets || []).filter(
+    (bucket) => bucket.samples > 0,
+  );
+  const metrics = Object.fromEntries(
+    Object.keys(metricDefinitions).map((key) => [
+      key,
+      {
+        label: metricDefinitions[key].label,
+        color: metricDefinitions[key].color,
+        values: buckets.map((bucket) => metricValues(bucket, key)),
+        peaks: buckets.map((bucket) => metricPeakValues(bucket, key)),
+        times: buckets.map((bucket) => new Date(bucket.start)),
+      },
+    ]),
+  );
+  const missing = (payload.buckets || []).filter(
+    (bucket) => bucket.missing,
+  ).length;
   return {
-    start,
-    end,
-    label: `${formatDateTime(start)} 至 ${formatDateTime(end)}`,
-    count: `${count} 条采样记录`,
-    cadence: `每 ${cadenceMinutes} 分钟`,
-    axis: [
-      formatAxisDate(start),
-      formatAxisDate(new Date((start.getTime() + end.getTime()) / 2)),
-      formatAxisDate(end),
-    ],
-    metrics: template.metrics,
-    details,
+    start: new Date(payload.start),
+    end: new Date(payload.end),
+    buckets,
+    metrics,
+    missing,
+    samplingInterval: payload.samplingInterval,
+    label: `${formatDateTime(payload.start)} 至 ${formatDateTime(payload.end)}`,
   };
 }
 
-function getPeakRisk(metricKey, peak) {
-  const limits = {
-    cpu: { medium: 65, high: 85, unit: "%" },
-    memory: { medium: 5.2, high: 6.8, unit: " GB" },
-    network: { medium: 5, high: 8, unit: " MB/s" },
+function getChartBounds(values) {
+  const minimum = Math.min(...values);
+  const maximum = Math.max(...values);
+  const padding = Math.max((maximum - minimum) * 0.12, 1);
+  return {
+    minimum: Math.max(0, minimum - padding),
+    maximum: maximum + padding,
   };
-  const limit = limits[metricKey];
-  if (peak >= limit.high)
+}
+
+function toChartPoints(values, bounds) {
+  const left = 24;
+  const right = 696;
+  const top = 24;
+  const bottom = 156;
+  const span = Math.max(bounds.maximum - bounds.minimum, 1);
+  return values.map((value, index) => {
+    const x =
+      values.length === 1
+        ? (left + right) / 2
+        : left + ((right - left) * index) / (values.length - 1);
+    const y = top + ((bounds.maximum - value) / span) * (bottom - top);
+    return [Number(x.toFixed(1)), Number(y.toFixed(1))];
+  });
+}
+
+function hideTrendTooltip() {
+  $("#chart-tooltip").hidden = true;
+  $("#trend-hover-guide").classList.remove("is-visible");
+  $("#trend-hover-point").classList.remove("is-visible");
+}
+
+function renderEmptyTrend(message) {
+  const baseline = "24,156 696,156";
+  $("#trend-line").setAttribute("points", baseline);
+  $("#trend-peak-line").setAttribute("points", baseline);
+  $("#trend-area").setAttribute("points", `${baseline} 696,156 24,156`);
+  $("#trend-point").setAttribute("cx", "696");
+  $("#trend-point").setAttribute("cy", "156");
+  $("#trend-chart").classList.add("is-empty");
+  $("#trend-range-name").textContent = "暂无历史指标";
+  $("#trend-sample-note").textContent = message;
+  $("#trend-current-value").textContent = "--";
+  $("#trend-axis").innerHTML = "<span>--</span><span>--</span><span>--</span>";
+  ["one", "two", "three", "four"].forEach((part) => {
+    $(`#summary-${part}-value`).textContent = "--";
+    $(`#summary-${part}-note`).textContent = message;
+  });
+  hideTrendTooltip();
+}
+
+function riskFor(metricKey, peak) {
+  const limits = metricKey === "network" ? [5, 8] : [65, 85];
+  if (peak >= limits[1])
     return {
       label: "高风险",
       className: "risk-high",
-      note: `达到 ${limit.high}${limit.unit} 阈值`,
+      note: `峰值达到 ${formatMetricValue(metricKey, peak)}`,
     };
-  if (peak >= limit.medium)
+  if (peak >= limits[0])
     return {
       label: "中风险",
       className: "risk-medium",
-      note: `达到 ${limit.medium}${limit.unit} 阈值`,
+      note: `峰值达到 ${formatMetricValue(metricKey, peak)}`,
     };
   return {
     label: "低风险",
     className: "risk-low",
-    note: `低于 ${limit.medium}${limit.unit} 阈值`,
+    note: `峰值低于 ${formatMetricValue(metricKey, limits[0])}`,
   };
 }
 
-function updateCurrentSnapshotClock(now = new Date()) {
-  const dateTime = formatDateTime(now);
-  const inputDateTime = formatDateInput(now);
-  $("#server-time").textContent = dateTime;
-  $("#server-time").dateTime = inputDateTime;
-  $("#current-metrics-time").textContent =
-    `更新于 ${pad(now.getHours())}:${pad(now.getMinutes())}`;
-  $("#current-metrics-time").dateTime = inputDateTime;
-}
-
 function renderTrend() {
-  const range = activeRange;
-  const metric = range.metrics[selectedTrendMetric];
-  activeChartBounds = getChartBounds(selectedTrendMetric, metric.values);
-  const points = toChartPoints(metric.values, activeChartBounds);
-  const pointText = points.map(([x, y]) => `${x},${y}`).join(" ");
-  const lastPoint = points.at(-1);
+  if (!activeRange) {
+    renderEmptyTrend("等待指标查询");
+    return;
+  }
+  const metric = activeRange.metrics[selectedTrendMetric];
+  if (!metric.values.length) {
+    renderEmptyTrend("该时间范围没有有效采样");
+    return;
+  }
+  $("#trend-chart").classList.remove("is-empty");
+  activeChartBounds = getChartBounds([...metric.values, ...metric.peaks]);
+  const averagePoints = toChartPoints(metric.values, activeChartBounds);
+  const peakPoints = toChartPoints(metric.peaks, activeChartBounds);
+  const pointText = averagePoints.map(([x, y]) => `${x},${y}`).join(" ");
   $("#trend-line").setAttribute("points", pointText);
+  $("#trend-peak-line").setAttribute(
+    "points",
+    peakPoints.map(([x, y]) => `${x},${y}`).join(" "),
+  );
   $("#trend-area").setAttribute("points", `${pointText} 696,156 24,156`);
+  const lastPoint = averagePoints.at(-1);
   $("#trend-point").setAttribute("cx", lastPoint[0]);
   $("#trend-point").setAttribute("cy", lastPoint[1]);
   $(".trend-chart").style.color = metric.color;
   $("#trend-chart-desc").textContent =
-    `${range.label}内的${metric.label}变化趋势`;
+    `${activeRange.label}内的${metric.label}平均值与峰值趋势`;
   $("#trend-chart").setAttribute(
     "aria-label",
-    `${metric.label}趋势图。使用方向键查看每个采样点的具体数据。`,
+    `${metric.label}趋势图。实线为平均值，虚线为峰值；使用方向键查看每个时间桶。`,
   );
-  $("#trend-range-name").textContent = range.label;
-  $("#trend-sample-note").textContent = `${range.count} · ${range.cadence}`;
+  $("#trend-range-name").textContent = activeRange.label;
+  $("#trend-sample-note").textContent =
+    `${metric.values.length} 个有效时间桶 · 平均值实线 · 峰值虚线${activeRange.missing ? ` · ${activeRange.missing} 个缺失` : ""}`;
   $("#trend-metric-label").textContent = metric.label;
   $("#trend-current-value").textContent =
-    `区间末值 ${formatMetricValue(selectedTrendMetric, metric.values.at(-1))}`;
-  $("#trend-axis").innerHTML = range.axis
-    .map((label) => `<span>${label}</span>`)
+    `末值 ${formatMetricValue(selectedTrendMetric, metric.values.at(-1))}`;
+  $("#trend-axis").innerHTML = [
+    metric.times[0],
+    metric.times[Math.floor(metric.times.length / 2)],
+    metric.times.at(-1),
+  ]
+    .map((time) => `<span>${escapeHTML(formatAxisDate(time))}</span>`)
     .join("");
-  const values = metric.values;
-  renderTrendYAxis(selectedTrendMetric, values);
-  hideTrendTooltip();
+  $("#trend-y-axis-left").hidden = true;
+  $("#trend-y-axis-right").hidden = true;
+  $("#chart-stage").classList.remove("has-dual-axis");
   const average =
-    values.reduce((total, value) => total + value, 0) / values.length;
-  const change = values.at(-1) - values[0];
-  const peak = Math.max(...values);
-  const peakIndex = values.indexOf(peak);
-  const peakTime = new Date(
-    range.start.getTime() +
-      (range.end.getTime() - range.start.getTime()) *
-        (peakIndex / (values.length - 1)),
-  );
-  const risk = getPeakRisk(selectedTrendMetric, peak);
+    metric.values.reduce((total, value) => total + value, 0) /
+    metric.values.length;
+  const change = metric.values.at(-1) - metric.values[0];
+  const peak = Math.max(...metric.peaks);
+  const peakIndex = metric.peaks.indexOf(peak);
+  const risk = riskFor(selectedTrendMetric, peak);
   $("#summary-one-label").textContent = "采样平均值";
   $("#summary-one-value").textContent = formatMetricValue(
     selectedTrendMetric,
@@ -596,15 +383,16 @@ function renderTrend() {
     selectedTrendMetric,
     change,
   );
-  $("#summary-two-note").textContent = "起点至结束";
+  $("#summary-two-note").textContent = "首个至最后有效时间桶";
   $("#summary-three-label").textContent = "采样峰值";
   $("#summary-three-value").textContent = formatMetricValue(
     selectedTrendMetric,
     peak,
   );
-  $("#summary-three-note").textContent = `${formatDateTime(peakTime)} 出现`;
-  const riskValue = $("#summary-four-value");
+  $("#summary-three-note").textContent =
+    `${formatDateTime(metric.times[peakIndex])} 出现`;
   $("#summary-four-label").textContent = "峰值风险";
+  const riskValue = $("#summary-four-value");
   riskValue.textContent = risk.label;
   riskValue.className = risk.className;
   $("#summary-four-note").textContent = risk.note;
@@ -614,18 +402,81 @@ function renderTrend() {
       button.dataset.trendMetric === selectedTrendMetric,
     ),
   );
+  hideTrendTooltip();
+}
+
+function showTrendTooltip(index) {
+  if (!activeRange) return;
+  const metric = activeRange.metrics[selectedTrendMetric];
+  if (!metric.values.length) return;
+  const safeIndex = Math.max(0, Math.min(index, metric.values.length - 1));
+  const [x, y] = toChartPoints(metric.values, activeChartBounds)[safeIndex];
+  $("#trend-hover-guide").setAttribute("x1", x);
+  $("#trend-hover-guide").setAttribute("x2", x);
+  $("#trend-hover-point").setAttribute("cx", x);
+  $("#trend-hover-point").setAttribute("cy", y);
+  $("#trend-hover-guide").classList.add("is-visible");
+  $("#trend-hover-point").classList.add("is-visible");
+  const tooltip = $("#chart-tooltip");
+  tooltip.style.setProperty("--tooltip-x", `${(x / 720) * 100}%`);
+  tooltip.style.setProperty("--tooltip-y", `${(y / 180) * 100}%`);
+  tooltip.classList.toggle("is-below", y < 72);
+  tooltip.innerHTML = `<strong>${escapeHTML(formatDateTime(metric.times[safeIndex]))}</strong><span>${escapeHTML(metric.label)} 平均 ${escapeHTML(formatMetricValue(selectedTrendMetric, metric.values[safeIndex]))} · 峰值 ${escapeHTML(formatMetricValue(selectedTrendMetric, metric.peaks[safeIndex]))}</span>`;
+  tooltip.hidden = false;
+}
+
+function bindTrendChartInteractions() {
+  const chart = $("#trend-chart");
+  let keyboardIndex = 0;
+  const pointerIndex = (event) => {
+    const metric = activeRange?.metrics[selectedTrendMetric];
+    if (!metric?.values.length) return 0;
+    const bounds = chart.getBoundingClientRect();
+    const ratio = Math.max(
+      0,
+      Math.min(1, (event.clientX - bounds.left) / bounds.width),
+    );
+    return Math.round(ratio * (metric.values.length - 1));
+  };
+  chart.addEventListener("pointermove", (event) =>
+    showTrendTooltip(pointerIndex(event)),
+  );
+  chart.addEventListener("pointerdown", (event) =>
+    showTrendTooltip(pointerIndex(event)),
+  );
+  chart.addEventListener("pointerleave", hideTrendTooltip);
+  chart.addEventListener("focus", () => showTrendTooltip(keyboardIndex));
+  chart.addEventListener("blur", hideTrendTooltip);
+  chart.addEventListener("keydown", (event) => {
+    const length =
+      activeRange?.metrics[selectedTrendMetric]?.values.length || 0;
+    if (!length) return;
+    if (event.key === "Home") keyboardIndex = 0;
+    else if (event.key === "End") keyboardIndex = length - 1;
+    else if (event.key === "ArrowLeft")
+      keyboardIndex = Math.max(0, keyboardIndex - 1);
+    else if (event.key === "ArrowRight")
+      keyboardIndex = Math.min(length - 1, keyboardIndex + 1);
+    else return;
+    event.preventDefault();
+    showTrendTooltip(keyboardIndex);
+  });
 }
 
 function renderRangeData() {
-  const range = activeRange;
-  $("#range-data-title-period").textContent = range.label;
+  if (!activeRange) return;
+  $("#range-data-title-period").textContent = activeRange.label;
   $("#range-data-description").textContent =
-    `展示该区间按 ${range.cadence.replace("每 ", "")}归集的代表性采样点。`;
-  $("#range-data-count").textContent = range.count;
-  $("#range-data-retention").textContent = "保留周期：30 天";
-  $("#range-data-list").innerHTML = range.details
+    "展示后端返回的有效时间桶平均值；趋势图虚线表示同桶峰值。";
+  $("#range-data-count").textContent =
+    `${activeRange.buckets.length} 个有效时间桶`;
+  $("#range-data-retention").textContent = activeRange.missing
+    ? `${activeRange.missing} 个时间桶存在缺失`
+    : "没有检测到缺失时间桶";
+  $("#range-data-list").innerHTML = activeRange.buckets
     .map(
-      (row) => `<tr>${row.map((value) => `<td>${value}</td>`).join("")}</tr>`,
+      (bucket) =>
+        `<tr><td>${escapeHTML(formatDateTime(bucket.start))}</td><td>${escapeHTML(formatMetricValue("cpu", metricValues(bucket, "cpu")))}</td><td>${escapeHTML(formatMetricValue("memory", metricValues(bucket, "memory")))}</td><td>${escapeHTML(formatMetricValue("memory", bucket.avg.diskPercent))}</td><td>${escapeHTML(formatMetricValue("network", metricValues(bucket, "network")))}</td></tr>`,
     )
     .join("");
 }
@@ -635,189 +486,328 @@ function openRangeData() {
   $("#range-data-dialog").showModal();
 }
 
-function renderDeploymentHistory(key) {
-  const rows = deploymentHistory[key];
-  $("#deployment-list").innerHTML = rows
-    .map(
-      (release) => `
-    <tr class="${release.current ? "current-release" : ""}">
-      <td><div class="release-cell"><code>${release.version}</code>${release.current ? "<span>当前运行</span>" : ""}</div><small>${release.commit}</small></td>
-      <td><span class="status-pill ${release.statusClass}"><i></i>${release.status}</span></td>
-      <td>${release.time}</td>
-      <td><span class="person"><span class="person-avatar">Z</span>zero</span></td>
-      <td class="numeric">${release.duration}</td>
-      <td>${release.current ? '<button class="quiet-button" type="button" disabled>当前版本</button>' : `<button class="rollback-button" type="button" data-version="${release.version}" data-commit="${release.rollbackCommit}">回滚至此版本</button>`}</td>
-    </tr>`,
-    )
-    .join("");
-  $$(".rollback-button").forEach((button) =>
-    button.addEventListener("click", () =>
-      openRollback(button.dataset.version, button.dataset.commit),
-    ),
-  );
-}
-
-function selectApplication(key) {
-  const app = applications[key];
-  if (!app) return;
-  selectedApp = key;
-  $$(".app-row").forEach((row) =>
-    row.classList.toggle("is-selected", row.dataset.app === key),
-  );
-  const avatar = $("#detail-avatar");
-  avatar.textContent = app.avatar;
-  avatar.className = `app-avatar ${app.avatarClass}`;
-  $("#detail-name").textContent = app.name;
-  const url = $("#detail-url");
-  url.href = `https://${app.url}`;
-  url.childNodes[0].nodeValue = `${app.url} `;
-  $("#detail-check").textContent = app.check;
-  $("#detail-resource").textContent = app.resource;
-  $("#detail-commit").textContent = app.commit;
-  $("#detail-branch").textContent = ` ${app.branch}`;
-  $("#deployments-title").textContent = `${app.name} 部署历史`;
-  $("#deployments .eyebrow").textContent = app.name;
-  renderDeploymentHistory(key);
-}
-
-function openRollback(version, commit) {
-  const dialog = $("#rollback-dialog");
-  $("#rollback-version").textContent = version;
-  $("#rollback-commit").textContent = `${version} · ${commit}`;
-  $("#rollback-app").textContent = applications[selectedApp].name;
-  $("#rollback-current").textContent = applications[selectedApp].version;
-  $("#confirm-input").value = "";
-  $("#confirm-rollback").disabled = true;
-  dialog.showModal();
-  $("#confirm-input").focus();
-}
-
-function finishRollback() {
-  const version = $("#rollback-version").textContent;
-  const button = $("#confirm-rollback");
-  button.disabled = true;
-  button.textContent = "正在验证健康检查...";
-  window.setTimeout(() => {
-    $("#rollback-dialog").close();
-    button.textContent = "确认回滚";
-    showToast(
-      `演示完成：${applications[selectedApp].name} 已回滚至 ${version}，健康检查通过。`,
-    );
-  }, 900);
-}
-
-$$(".app-select").forEach((button) =>
-  button.addEventListener("click", () => selectApplication(button.dataset.app)),
-);
-
-$$(".nav-link[data-target]").forEach((button) => {
-  button.addEventListener("click", () => {
-    const target = button.dataset.target;
-    const section = document.getElementById(target);
-    if (!section) return;
-    $$(".nav-link[data-target]").forEach((item) => {
-      item.classList.toggle("is-active", item === button);
-      item.removeAttribute("aria-current");
-    });
-    button.setAttribute("aria-current", "page");
-    $("#page-label").textContent = pageLabels[target];
-    section.scrollIntoView({
-      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
-        ? "auto"
-        : "smooth",
-      block: "start",
-    });
-  });
-});
-
-$$("[data-trend-metric]").forEach((button) =>
-  button.addEventListener("click", () => {
-    selectedTrendMetric = button.dataset.trendMetric;
-    renderTrend();
-  }),
-);
-$$(".rollback-button").forEach((button) =>
-  button.addEventListener("click", () =>
-    openRollback(button.dataset.version, button.dataset.commit),
-  ),
-);
-
-$("#open-range-data").addEventListener("click", openRangeData);
-$("#time-range-form").addEventListener("submit", (event) => {
-  event.preventDefault();
-  const startInput = $("#range-start");
-  const endInput = $("#range-end");
-  const feedback = $("#range-feedback");
-  const start = new Date(startInput.value);
-  const end = new Date(endInput.value);
-  const now = new Date();
-  const maxDuration = 30 * 24 * 60 * 60 * 1000;
-  let error = "";
-
+function applicationHealth(application) {
   if (
-    !startInput.value ||
-    !endInput.value ||
-    Number.isNaN(start.getTime()) ||
-    Number.isNaN(end.getTime())
+    application.health.status === "healthy" &&
+    application.services.every((service) => service.status === "running")
   )
-    error = "请填写精确到分钟的开始和结束时间。";
-  else if (end <= start) error = "结束时间必须晚于开始时间。";
-  else if (end > now) error = "结束时间不能晚于服务器当前时间。";
-  else if (end.getTime() - start.getTime() > maxDuration)
-    error = "当前演示最多可查询 30 天范围。";
+    return ["健康", "is-healthy"];
+  if (application.health.status === "unhealthy")
+    return ["健康检查失败", "is-attention"];
+  if (application.health.status === "unavailable")
+    return ["健康检查不可用", "is-attention"];
+  if (application.services.some((service) => service.status === "failed"))
+    return ["服务失败", "is-attention"];
+  if (!application.health.configured) return ["未配置健康检查", "is-attention"];
+  return ["状态未知", "is-attention"];
+}
 
-  startInput.setCustomValidity(error);
-  endInput.setCustomValidity(error);
-  startInput.setAttribute("aria-invalid", String(Boolean(error)));
-  endInput.setAttribute("aria-invalid", String(Boolean(error)));
-  feedback.classList.toggle("is-error", Boolean(error));
-  feedback.textContent = error;
-  if (error) return;
+function latestRelease(application) {
+  return application.releases?.[0] || null;
+}
 
-  activeRange = buildRange(start, end);
-  renderTrend();
-  if ($("#range-data-dialog").open) renderRangeData();
-  feedback.textContent = `已加载 ${activeRange.label} 的指标分析。`;
-});
-$("#confirm-input").addEventListener("input", (event) => {
-  $("#confirm-rollback").disabled = event.target.value !== "ROLLBACK";
-});
-$("#confirm-rollback").addEventListener("click", finishRollback);
-$("#open-deployments").addEventListener("click", () => {
-  document
-    .getElementById("deployments")
-    .scrollIntoView({ behavior: "smooth", block: "start" });
-});
-$("#deploy-button").addEventListener("click", () =>
-  showToast(
-    `演示模式：连接部署执行器后可为 ${applications[selectedApp].name} 创建新部署。`,
-  ),
-);
-$("#detail-menu").addEventListener("click", () =>
-  showToast(`${applications[selectedApp].name} 的高级操作将在后端接入后启用。`),
-);
-$$("[data-demo-action]").forEach((button) =>
-  button.addEventListener("click", () => showToast(button.dataset.demoAction)),
-);
-$("#theme-toggle").addEventListener("click", () =>
-  document.body.classList.toggle("dark"),
-);
-$("#refresh-button").addEventListener("click", (event) => {
-  event.currentTarget.classList.add("is-refreshing");
-  window.setTimeout(() => {
-    updateCurrentSnapshotClock();
-    event.currentTarget.classList.remove("is-refreshing");
-    showToast("状态已更新：采集正常。");
-  }, 500);
-});
+function avatarClass(index) {
+  return ["app-blue", "app-orange", "app-green"][index % 3];
+}
 
-const initialEnd = new Date();
-initialEnd.setSeconds(0, 0);
-const initialStart = new Date(initialEnd.getTime() - 24 * 60 * 60 * 1000);
-$("#range-start").value = formatDateInput(initialStart);
-$("#range-end").value = formatDateInput(initialEnd);
-activeRange = buildRange(initialStart, initialEnd);
-updateCurrentSnapshotClock(initialEnd);
-window.setInterval(updateCurrentSnapshotClock, 60000);
-bindTrendChartInteractions();
-renderTrend();
+function renderDerivedServiceState() {
+  const services = applications.flatMap((application) =>
+    application.services.map((service) => ({ ...service, application })),
+  );
+  $("#nav-app-count").textContent = String(applications.length);
+  $("#nav-service-count").textContent = String(services.length);
+  $("#applications-count").textContent = `已纳管 ${applications.length} 个应用`;
+  $("#service-list").hidden = false;
+  $("#event-list").hidden = false;
+  $("#service-list").innerHTML = services.length
+    ? services
+        .map(({ service, application }) => {
+          const healthy = service.status === "running";
+          const detail =
+            service.status === "unknown"
+              ? "状态不可读取"
+              : `${service.activeState || service.status}${service.subState ? ` · ${service.subState}` : ""}`;
+          return `<li><span class="service-health ${healthy ? "is-healthy" : "is-attention"}"></span><div><strong>${escapeHTML(service.name)}</strong><span>${escapeHTML(application.name)} · ${escapeHTML(detail)}</span></div><code>${escapeHTML(service.status || "unknown")}</code></li>`;
+        })
+        .join("")
+    : '<li><span class="service-health is-attention"></span><div><strong>暂无登记服务</strong><span>应用配置为空或未设置 systemd unit。</span></div><code>--</code></li>';
+  $("#event-list").innerHTML =
+    '<li><span class="event-icon info">i</span><div><strong>当前没有可读取的运行事件</strong><span>事件检索不属于版本 001 的只读接口。</span></div></li>';
+}
+
+function renderInventoryUnavailable(message) {
+  $("#nav-app-count").textContent = "--";
+  $("#nav-service-count").textContent = "--";
+  $("#applications-count").textContent = "应用清单不可用";
+  $("#application-list").innerHTML =
+    `<div class="application-table table-header" aria-hidden="true"><span>应用</span><span>状态</span><span>当前版本</span><span>最近发布</span><span>访问</span><span></span></div><div class="application-table"><span class="app-name"><span><strong>无法读取应用清单</strong><small>${escapeHTML(message)}</small></span></span><span>--</span><code>--</code><time>--</time><span>--</span><span></span></div>`;
+  $("#service-list").hidden = false;
+  $("#service-list").innerHTML =
+    `<li><span class="service-health is-attention"></span><div><strong>服务状态不可用</strong><span>${escapeHTML(message)}</span></div><code>--</code></li>`;
+  $("#event-list").hidden = false;
+  $("#event-list").innerHTML =
+    '<li><span class="event-icon info">i</span><div><strong>运行事件尚未接入</strong><span>版本 001 仅提供主机、应用和发布记录读取。</span></div></li>';
+}
+
+function renderApplications() {
+  const container = $("#application-list");
+  const header =
+    '<div class="application-table table-header" aria-hidden="true"><span>应用</span><span>状态</span><span>当前版本</span><span>最近发布</span><span>访问</span><span></span></div>';
+  if (!applications.length) {
+    container.innerHTML = `${header}<div class="application-table"><span class="app-name"><span><strong>暂无已纳管应用</strong><small>在配置文件 applications 中登记后会显示在这里。</small></span></span><span>--</span><code>--</code><time>--</time><span>--</span><span></span></div>`;
+    renderApplicationDetail(null);
+    renderDerivedServiceState();
+    return;
+  }
+  const rows = applications
+    .map((application, index) => {
+      const [status, className] = applicationHealth(application);
+      const release = latestRelease(application);
+      const releaseTime = release
+        ? formatDateTime(release.finishedAt)
+        : "暂无记录";
+      const version = release?.version || "--";
+      const selected = application.id === selectedAppID;
+      const safeURL = escapeHTML(application.publicUrl);
+      return `<div class="application-table app-row${selected ? " is-selected" : ""}" data-app="${escapeHTML(application.id)}"><button class="app-select" type="button" data-app="${escapeHTML(application.id)}" aria-label="查看 ${escapeHTML(application.name)} 应用详情"><span class="app-name"><span class="app-avatar ${avatarClass(index)}">${escapeHTML(application.name.slice(0, 1).toUpperCase())}</span><span><strong>${escapeHTML(application.name)}</strong><small>systemd · ${application.services.length} 个服务</small></span></span></button><span class="status-pill ${className}"><i></i>${escapeHTML(status)}</span><code>${escapeHTML(version)}</code><time>${escapeHTML(releaseTime)}</time><a class="quick-link" href="${safeURL}" target="_blank" rel="noreferrer" aria-label="打开 ${escapeHTML(application.name)}" title="打开 ${escapeHTML(application.name)}"><span>打开</span></a><span class="row-action" aria-hidden="true">›</span></div>`;
+    })
+    .join("");
+  container.innerHTML = `${header}${rows}`;
+  renderDerivedServiceState();
+}
+
+function releaseStatusClass(status) {
+  return status === "success" ? "is-healthy" : "is-attention";
+}
+
+function releaseStatusLabel(status) {
+  return status === "success" ? "成功" : status || "未知";
+}
+
+function renderApplicationDetail(application) {
+  const avatar = $("#detail-avatar");
+  if (!application) {
+    avatar.textContent = "--";
+    $("#detail-name").textContent = "暂无应用";
+    $("#detail-url").textContent = "等待配置";
+    $("#detail-url").removeAttribute("href");
+    $("#detail-check").textContent = "未配置健康检查";
+    $("#detail-resource").textContent = "没有可读取的服务信息";
+    $("#detail-commit").textContent = "--";
+    $("#detail-branch").textContent = "";
+    $("#deployments-title").textContent = "发布记录";
+    $("#deployments .eyebrow").textContent = "只读";
+    $("#deployment-list").innerHTML =
+      '<tr><td colspan="6">暂无应用或发布记录。</td></tr>';
+    return;
+  }
+  const index = applications.findIndex((item) => item.id === application.id);
+  avatar.textContent = application.name.slice(0, 1).toUpperCase();
+  avatar.className = `app-avatar ${avatarClass(index)}`;
+  $("#detail-name").textContent = application.name;
+  $("#detail-url").href = application.publicUrl;
+  $("#detail-url").childNodes[0].nodeValue =
+    `${new URL(application.publicUrl).host} `;
+  const healthTime = application.health.checkedAt
+    ? ` · ${formatDateTime(application.health.checkedAt)}`
+    : "";
+  $("#detail-check").textContent =
+    `${applicationHealth(application)[0]}${healthTime}`;
+  $("#detail-resource").textContent =
+    `${application.services.length} 个登记服务 · ${application.services.filter((service) => service.status === "running").length} 个运行中`;
+  const release = latestRelease(application);
+  $("#detail-commit").textContent = release?.commit || "暂无记录";
+  $("#detail-branch").textContent = " 只读发布记录";
+  $("#deployments-title").textContent = `${application.name} 发布记录`;
+  $("#deployments .eyebrow").textContent = application.name;
+  const releases = application.releases || [];
+  $("#deployment-list").innerHTML = releases.length
+    ? releases
+        .map(
+          (release, index) =>
+            `<tr${index === 0 ? ' class="current-release"' : ""}><td><div class="release-cell"><code>${escapeHTML(release.version)}</code>${index === 0 ? "<span>最新记录</span>" : ""}</div><small>${escapeHTML(release.commit)}</small></td><td><span class="status-pill ${releaseStatusClass(release.status)}"><i></i>${escapeHTML(releaseStatusLabel(release.status))}</span></td><td><time>${escapeHTML(formatDateTime(release.finishedAt))}</time></td><td><span class="person"><span class="person-avatar">${escapeHTML((release.actor || "-").slice(0, 1).toUpperCase())}</span>${escapeHTML(release.actor || "未记录")}</span></td><td class="numeric">${escapeHTML(formatDuration(release.startedAt, release.finishedAt))}</td><td><button class="quiet-button" type="button" disabled title="当前版本只支持读取发布记录">只读</button></td></tr>`,
+        )
+        .join("")
+    : '<tr><td colspan="6">暂无发布记录。</td></tr>';
+}
+
+function formatDuration(start, end) {
+  const duration = Math.max(0, new Date(end) - new Date(start));
+  if (!Number.isFinite(duration)) return "--";
+  return `${Math.floor(duration / 60000)}m ${Math.floor((duration % 60000) / 1000)}s`;
+}
+
+async function selectApplication(id) {
+  const application = applications.find((item) => item.id === id);
+  if (!application) return;
+  selectedAppID = id;
+  renderApplications();
+  renderApplicationDetail(application);
+  if (application.releases) return;
+  try {
+    const payload = await requestJSON(
+      `/api/v1/applications/${encodeURIComponent(id)}/releases`,
+    );
+    application.releases = payload.releases || [];
+  } catch {
+    application.releases = [];
+    showToast("发布记录暂时不可读取。", true);
+  }
+  renderApplications();
+  renderApplicationDetail(application);
+}
+
+async function loadApplications() {
+  const payload = await requestJSON("/api/v1/applications");
+  applications = payload.applications || [];
+  applications.forEach((application) => {
+    application.releases = null;
+  });
+  selectedAppID = applications[0]?.id || null;
+  renderApplications();
+  if (selectedAppID) await selectApplication(selectedAppID);
+}
+
+async function loadRange(start, end) {
+  const feedback = $("#range-feedback");
+  feedback.classList.remove("is-error");
+  feedback.textContent = "正在加载历史指标…";
+  $("#time-range-form button[type='submit']").disabled = true;
+  try {
+    const query = new URLSearchParams({
+      start: start.toISOString(),
+      end: end.toISOString(),
+    });
+    activeRange = buildRange(await requestJSON(`/api/v1/metrics?${query}`));
+    renderTrend();
+    if ($("#range-data-dialog").open) renderRangeData();
+    feedback.textContent = activeRange.buckets.length
+      ? "已加载后端指标数据。"
+      : "该时间范围暂无指标数据。";
+  } catch (error) {
+    activeRange = null;
+    renderTrend();
+    feedback.classList.add("is-error");
+    feedback.textContent = `无法加载指标：${error.message}`;
+  } finally {
+    $("#time-range-form button[type='submit']").disabled = false;
+  }
+}
+
+function bindInteractions() {
+  $$(".nav-link[data-target]").forEach((button) =>
+    button.addEventListener("click", () => {
+      const target = document.getElementById(button.dataset.target);
+      if (!target) return;
+      $$(".nav-link[data-target]").forEach((item) => {
+        item.classList.toggle("is-active", item === button);
+        item.removeAttribute("aria-current");
+      });
+      button.setAttribute("aria-current", "page");
+      $("#page-label").textContent = pageLabels[button.dataset.target];
+      target.scrollIntoView({
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+          ? "auto"
+          : "smooth",
+        block: "start",
+      });
+    }),
+  );
+  $$("[data-trend-metric]").forEach((button) =>
+    button.addEventListener("click", () => {
+      selectedTrendMetric = button.dataset.trendMetric;
+      renderTrend();
+    }),
+  );
+  $("#application-list").addEventListener("click", (event) => {
+    const button = event.target.closest(".app-select");
+    if (button) selectApplication(button.dataset.app);
+  });
+  $("#open-range-data").addEventListener("click", openRangeData);
+  $("#time-range-form").addEventListener("submit", (event) => {
+    event.preventDefault();
+    const startInput = $("#range-start");
+    const endInput = $("#range-end");
+    const start = new Date(startInput.value);
+    const end = new Date(endInput.value);
+    const invalid =
+      !startInput.value ||
+      !endInput.value ||
+      Number.isNaN(start.getTime()) ||
+      Number.isNaN(end.getTime()) ||
+      end <= start;
+    const message = invalid ? "请填写结束时间晚于开始时间的分钟级范围。" : "";
+    startInput.setCustomValidity(message);
+    endInput.setCustomValidity(message);
+    startInput.setAttribute("aria-invalid", String(Boolean(message)));
+    endInput.setAttribute("aria-invalid", String(Boolean(message)));
+    if (message) {
+      $("#range-feedback").classList.add("is-error");
+      $("#range-feedback").textContent = message;
+      return;
+    }
+    loadRange(start, end);
+  });
+  $("#open-deployments").addEventListener("click", () =>
+    document
+      .getElementById("deployments")
+      .scrollIntoView({ behavior: "smooth", block: "start" }),
+  );
+  $("#deploy-button").addEventListener("click", () =>
+    showToast("当前版本仅支持读取发布记录。", true),
+  );
+  $("#detail-menu").addEventListener("click", () =>
+    showToast("当前版本没有可执行的应用操作。", true),
+  );
+  $$("[data-demo-action]").forEach((button) => {
+    button.disabled = true;
+    button.setAttribute("aria-disabled", "true");
+    button.title = "当前版本尚未提供此功能";
+  });
+  $("#theme-toggle").addEventListener("click", () =>
+    document.body.classList.toggle("dark"),
+  );
+  $("#refresh-button").addEventListener("click", async (event) => {
+    event.currentTarget.classList.add("is-refreshing");
+    try {
+      renderOverview(await requestJSON("/api/v1/overview"));
+      await loadApplications();
+      setDataBadge("后端已连接");
+      showToast("状态已从后端刷新。");
+    } catch (error) {
+      setOverviewUnavailable(`后端不可用：${error.message}`);
+      renderInventoryUnavailable(`后端不可用：${error.message}`);
+      setDataBadge("后端不可用", true);
+      showToast(`刷新失败：${error.message}`, true);
+    } finally {
+      event.currentTarget.classList.remove("is-refreshing");
+    }
+  });
+  bindTrendChartInteractions();
+}
+
+async function initialize() {
+  const end = new Date();
+  end.setSeconds(0, 0);
+  const start = new Date(end.getTime() - 24 * 60 * 60 * 1000);
+  $("#range-start").value = formatDateInput(start);
+  $("#range-end").value = formatDateInput(end);
+  renderEmptyTrend("正在连接后端");
+  bindInteractions();
+  try {
+    const [overview] = await Promise.all([
+      requestJSON("/api/v1/overview"),
+      loadApplications(),
+      loadRange(start, end),
+    ]);
+    renderOverview(overview);
+    setDataBadge("后端已连接");
+  } catch (error) {
+    setOverviewUnavailable(`后端不可用：${error.message}`);
+    renderInventoryUnavailable(`后端不可用：${error.message}`);
+    setDataBadge("后端不可用", true);
+    showToast(`无法连接后端：${error.message}`, true);
+  }
+}
+
+initialize();

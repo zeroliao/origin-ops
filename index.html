@@ -55,7 +55,8 @@
               <path d="m21 16-9 5-9-5 9-5 9 5Z" />
               <path d="m3 12 9 5 9-5M3 8l9 5 9-5-9-5-9 5Z" />
             </svg>
-            <span>应用</span><span class="nav-count">3</span>
+            <span>应用</span
+            ><span class="nav-count" id="nav-app-count">--</span>
           </button>
           <button class="nav-link" type="button" data-target="services">
             <svg aria-hidden="true" viewBox="0 0 24 24">
@@ -64,7 +65,8 @@
               <rect x="3" y="17" width="18" height="4" rx="1" />
               <path d="M7 5.5h.01M7 12.5h.01M7 19h.01" />
             </svg>
-            <span>服务</span><span class="nav-count">8</span>
+            <span>服务</span
+            ><span class="nav-count" id="nav-service-count">--</span>
           </button>
           <button class="nav-link" type="button" data-target="deployments">
             <svg aria-hidden="true" viewBox="0 0 24 24">
@@ -83,8 +85,7 @@
                 d="M18 8A6 6 0 0 0 6 8c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"
               />
             </svg>
-            <span>通知</span
-            ><span class="notification-dot" aria-label="1 条未读通知"></span>
+            <span>通知</span>
           </button>
           <button
             class="nav-link"
@@ -110,7 +111,9 @@
             ><strong id="page-label">总览</strong>
           </div>
           <div class="topbar-actions">
-            <span class="demo-badge"><span></span>演示数据</span>
+            <span class="demo-badge" id="data-source-badge"
+              ><span></span>正在连接后端</span
+            >
             <button
               class="icon-button"
               id="theme-toggle"
@@ -154,15 +157,12 @@
               <div class="eyebrow">
                 <span class="live-dot"></span>当前时刻快照
                 <span class="muted"
-                  >服务器时间
-                  <time id="server-time" datetime="2026-08-15T13:24"
-                    >2026-08-15 13:24</time
-                  ></span
+                  >服务器时间 <time id="server-time">等待后端返回</time></span
                 >
               </div>
               <h1 id="overview-title">服务器总览</h1>
               <p>
-                主机 <code>sub2api</code>
+                主机 <code id="host-name">正在加载</code>
                 <span aria-hidden="true">·</span> 腾讯云 CVM
                 <span aria-hidden="true">·</span> 广州
                 <span aria-hidden="true">·</span> 实时采集
@@ -174,9 +174,7 @@
             <div class="current-metrics-heading">
               <span class="eyebrow" id="current-metrics-title"
                 >服务器当前指标</span
-              ><time id="current-metrics-time" datetime="2026-08-15T13:24"
-                >更新于 13:24</time
-              >
+              ><time id="current-metrics-time">等待后端返回</time>
             </div>
             <div class="metric-grid" aria-label="主机当前指标">
               <article class="metric-card">
@@ -191,25 +189,11 @@
                   ></span>
                 </div>
                 <div class="metric-value">
-                  <strong id="cpu-value">23.8%</strong
-                  ><span class="change is-good">-4.1%</span>
+                  <strong id="cpu-value">--</strong
+                  ><span class="change" id="cpu-change">等待采样</span>
                 </div>
-                <svg
-                  class="sparkline spark-blue"
-                  viewBox="0 0 240 46"
-                  preserveAspectRatio="none"
-                  aria-label="CPU 使用率趋势"
-                >
-                  <path
-                    class="spark-area"
-                    d="M0 35 L15 28 L30 32 L45 16 L60 24 L75 22 L90 28 L105 15 L120 21 L135 18 L150 25 L165 14 L180 20 L195 10 L210 19 L225 16 L240 22 V46 H0Z"
-                  />
-                  <path
-                    d="M0 35 L15 28 L30 32 L45 16 L60 24 L75 22 L90 28 L105 15 L120 21 L135 18 L150 25 L165 14 L180 20 L195 10 L210 19 L225 16 L240 22"
-                  />
-                </svg>
-                <span class="metric-caption"
-                  >4 vCPU <span class="muted">·</span> Load 0.71</span
+                <span class="metric-caption" id="cpu-caption"
+                  >等待后端返回主机信息</span
                 >
               </article>
               <article class="metric-card">
@@ -224,18 +208,19 @@
                   ></span>
                 </div>
                 <div class="metric-value">
-                  <strong id="memory-value">2.81 GB</strong
-                  ><span class="of-total">/ 8 GB</span>
+                  <strong id="memory-value">--</strong
+                  ><span class="of-total" id="memory-total">/ --</span>
                 </div>
-                <div class="progress-track" aria-label="内存使用 35%">
-                  <span
+                <div class="progress-track" aria-label="内存使用率">
+                  <progress
                     class="progress-fill fill-teal"
-                    style="width: 35%"
-                  ></span>
+                    id="memory-progress"
+                    max="100"
+                    value="0"
+                    aria-label="内存使用率"
+                  ></progress>
                 </div>
-                <span class="metric-caption"
-                  >可用 5.19 GB <span class="muted">·</span> 缓存 620 MB</span
-                >
+                <span class="metric-caption" id="memory-caption">等待采样</span>
               </article>
               <article class="metric-card">
                 <div class="metric-heading">
@@ -249,17 +234,19 @@
                   ></span>
                 </div>
                 <div class="metric-value">
-                  <strong>43.2 GB</strong><span class="of-total">/ 80 GB</span>
+                  <strong id="disk-value">--</strong
+                  ><span class="of-total" id="disk-total">/ --</span>
                 </div>
-                <div class="progress-track" aria-label="磁盘使用 54%">
-                  <span
+                <div class="progress-track" aria-label="磁盘使用率">
+                  <progress
                     class="progress-fill fill-amber"
-                    style="width: 54%"
-                  ></span>
+                    id="disk-progress"
+                    max="100"
+                    value="0"
+                    aria-label="磁盘使用率"
+                  ></progress>
                 </div>
-                <span class="metric-caption"
-                  >已用 54% <span class="muted">·</span> 预计可用 118 天</span
-                >
+                <span class="metric-caption" id="disk-caption">等待采样</span>
               </article>
               <article class="metric-card">
                 <div class="metric-heading">
@@ -271,25 +258,11 @@
                   ></span>
                 </div>
                 <div class="metric-value">
-                  <strong id="network-value">3.8 MB/s</strong
-                  ><span class="change is-good">稳定</span>
+                  <strong id="network-value">--</strong
+                  ><span class="change" id="network-change">等待采样</span>
                 </div>
-                <svg
-                  class="sparkline spark-violet"
-                  viewBox="0 0 240 46"
-                  preserveAspectRatio="none"
-                  aria-label="网络出站趋势"
-                >
-                  <path
-                    class="spark-area"
-                    d="M0 33 L15 28 L30 34 L45 30 L60 20 L75 29 L90 19 L105 23 L120 9 L135 25 L150 20 L165 27 L180 14 L195 19 L210 12 L225 25 L240 17 V46 H0Z"
-                  />
-                  <path
-                    d="M0 33 L15 28 L30 34 L45 30 L60 20 L75 29 L90 19 L105 23 L120 9 L135 25 L150 20 L165 27 L180 14 L195 19 L210 12 L225 25 L240 17"
-                  />
-                </svg>
-                <span class="metric-caption"
-                  >入站 1.2 MB/s <span class="muted">·</span> 本月 186 GB</span
+                <span class="metric-caption" id="network-caption"
+                  >等待采样</span
                 >
               </article>
             </div>
@@ -412,6 +385,11 @@
                         id="trend-line"
                         points="24,124 120,92 216,104 312,58 408,88 504,72 600,94 696,66"
                       />
+                      <polyline
+                        class="trend-peak-line"
+                        id="trend-peak-line"
+                        points="24,124 120,92 216,104 312,58 408,88 504,72 600,94 696,66"
+                      />
                       <circle
                         class="trend-point"
                         id="trend-point"
@@ -469,7 +447,11 @@
             </div>
           </section>
 
-          <section class="status-banner" aria-label="整体状态">
+          <section
+            class="status-banner is-pending"
+            id="status-banner"
+            aria-label="整体状态"
+          >
             <div class="status-symbol">
               <svg aria-hidden="true" viewBox="0 0 24 24">
                 <path d="m9 12 2 2 4-4" />
@@ -477,8 +459,10 @@
               </svg>
             </div>
             <div>
-              <strong>主机运行稳定</strong
-              ><span>8 个受监控服务正常，连续运行 <b>17 天 4 小时</b></span>
+              <strong id="overall-status-title">正在读取主机状态</strong
+              ><span id="overall-status-note"
+                >等待后端返回实时指标和服务状态。</span
+              >
             </div>
             <a href="#events"
               >查看运行事件
@@ -494,7 +478,9 @@
           >
             <div class="section-heading">
               <div>
-                <span class="eyebrow">已纳管 3 个应用</span>
+                <span class="eyebrow" id="applications-count"
+                  >正在读取应用清单</span
+                >
                 <h2 id="applications-title">应用运行状态</h2>
               </div>
               <button
@@ -509,7 +495,7 @@
               </button>
             </div>
             <div class="applications-layout">
-              <div class="application-table-wrap">
+              <div class="application-table-wrap" id="application-list">
                 <div class="application-table table-header" aria-hidden="true">
                   <span>应用</span><span>状态</span><span>当前版本</span
                   ><span>最近发布</span><span>访问</span><span></span>
@@ -703,7 +689,14 @@
                 <span class="eyebrow">Sub2API</span>
                 <h2 id="deployments-title">部署历史</h2>
               </div>
-              <button class="primary-button" id="deploy-button" type="button">
+              <button
+                class="primary-button"
+                id="deploy-button"
+                type="button"
+                disabled
+                aria-disabled="true"
+                title="当前版本仅支持读取发布记录"
+              >
                 <svg aria-hidden="true" viewBox="0 0 24 24">
                   <path d="M12 3v12" />
                   <path d="m7 8 5-5 5 5" />
@@ -840,7 +833,7 @@
                   </svg>
                 </button>
               </div>
-              <ul class="service-list">
+              <ul class="service-list" id="service-list" hidden>
                 <li>
                   <span class="service-health is-healthy"></span>
                   <div>
@@ -943,7 +936,7 @@
                   </svg>
                 </button>
               </div>
-              <ol class="event-list">
+              <ol class="event-list" id="event-list" hidden>
                 <li>
                   <span class="event-icon success"
                     ><svg aria-hidden="true" viewBox="0 0 24 24">

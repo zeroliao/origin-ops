@@ -1,0 +1,28 @@
+[Unit]
+Description=Origin Ops read-only operations console
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=origin-ops
+Group=origin-ops
+WorkingDirectory=/var/lib/origin-ops
+ExecStart=/usr/local/bin/origin-ops --config /etc/origin-ops/config.json
+Restart=on-failure
+RestartSec=5s
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/origin-ops/metrics /var/lib/origin-ops/releases
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+CapabilityBoundingSet=
+AmbientCapabilities=
+LockPersonality=true
+RestrictSUIDSGID=true
+MemoryMax=128M
+
+[Install]
+WantedBy=multi-user.target
