@@ -3,5 +3,6 @@
   "metricsDir": "/var/lib/origin-ops/metrics",
   "samplingIntervalSeconds": 60,
   "maxQueryDays": 31,
-  "maxChartPoints": 240
+  "maxChartPoints": 240,
+  "applications": []
 }

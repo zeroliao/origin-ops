@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"net/url"
 	"os"
+	"regexp"
 	"strings"
 	"time"
 )
@@ -19,12 +21,27 @@ const (
 )
 
 type Config struct {
-	ListenAddress          string `json:"listenAddress"`
-	MetricsDir             string `json:"metricsDir"`
-	SamplingIntervalSecond int    `json:"samplingIntervalSeconds"`
-	MaxQueryDays           int    `json:"maxQueryDays"`
-	MaxChartPoints         int    `json:"maxChartPoints"`
+	ListenAddress          string        `json:"listenAddress"`
+	MetricsDir             string        `json:"metricsDir"`
+	SamplingIntervalSecond int           `json:"samplingIntervalSeconds"`
+	MaxQueryDays           int           `json:"maxQueryDays"`
+	MaxChartPoints         int           `json:"maxChartPoints"`
+	Applications           []Application `json:"applications"`
 }
+
+type Application struct {
+	ID            string   `json:"id"`
+	Name          string   `json:"name"`
+	PublicURL     string   `json:"publicUrl"`
+	Services      []string `json:"services"`
+	HealthURL     string   `json:"healthUrl"`
+	ReleaseRecord string   `json:"releaseRecord"`
+}
+
+var (
+	applicationIDPattern = regexp.MustCompile(`^[a-z0-9][a-z0-9-]{0,63}$`)
+	serviceUnitPattern   = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9_.@-]*\.service$`)
+)
 
 func Default() Config {
 	return Config{
@@ -95,6 +112,59 @@ func (c Config) Validate() error {
 	}
 	if c.MaxChartPoints < 1 || c.MaxChartPoints > 2000 {
 		return fmt.Errorf("maxChartPoints must be between 1 and 2000")
+	}
+	applicationIDs := make(map[string]struct{}, len(c.Applications))
+	for _, application := range c.Applications {
+		if err := application.Validate(); err != nil {
+			return fmt.Errorf("applications[%q]: %w", application.ID, err)
+		}
+		if _, exists := applicationIDs[application.ID]; exists {
+			return fmt.Errorf("applications[%q]: duplicate id", application.ID)
+		}
+		applicationIDs[application.ID] = struct{}{}
+	}
+	return nil
+}
+
+func (a Application) Validate() error {
+	if !applicationIDPattern.MatchString(a.ID) {
+		return fmt.Errorf("id must use lowercase letters, numbers, and hyphens")
+	}
+	if strings.TrimSpace(a.Name) == "" {
+		return fmt.Errorf("name is required")
+	}
+	if err := validateWebURL(a.PublicURL, false); err != nil {
+		return fmt.Errorf("publicUrl: %w", err)
+	}
+	if a.HealthURL != "" {
+		if err := validateWebURL(a.HealthURL, true); err != nil {
+			return fmt.Errorf("healthUrl: %w", err)
+		}
+	}
+	if a.ReleaseRecord == "" {
+		return fmt.Errorf("releaseRecord is required")
+	}
+	for _, service := range a.Services {
+		if !serviceUnitPattern.MatchString(service) {
+			return fmt.Errorf("service %q must be a .service unit name", service)
+		}
+	}
+	return nil
+}
+
+func validateWebURL(value string, requireLoopback bool) error {
+	parsed, err := url.ParseRequestURI(value)
+	if err != nil || parsed.Scheme == "" || parsed.Host == "" {
+		return fmt.Errorf("must be an absolute URL")
+	}
+	if parsed.Scheme != "http" && parsed.Scheme != "https" {
+		return fmt.Errorf("must use http or https")
+	}
+	if parsed.User != nil {
+		return fmt.Errorf("must not include credentials")
+	}
+	if requireLoopback && !isLoopbackHost(parsed.Hostname()) {
+		return fmt.Errorf("must use a loopback host")
 	}
 	return nil
 }

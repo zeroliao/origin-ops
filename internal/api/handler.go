@@ -1,7 +1,9 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/fs"
 	"math"
@@ -11,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"origin-ops/internal/inventory"
 	"origin-ops/internal/metrics"
 )
 
@@ -22,6 +25,11 @@ type MetricStore interface {
 	Scan(start, end time.Time, visit func(metrics.Snapshot) error) error
 }
 
+type ApplicationInventory interface {
+	List(context.Context) []inventory.Application
+	Releases(context.Context, string) ([]inventory.Release, error)
+}
+
 type Dependencies struct {
 	Assets           fs.FS
 	Sampler          Sampler
@@ -29,6 +37,7 @@ type Dependencies struct {
 	SamplingInterval time.Duration
 	MaxQueryDays     int
 	MaxChartPoints   int
+	Inventory        ApplicationInventory
 }
 
 func NewHandler(dependencies Dependencies) http.Handler {
@@ -61,6 +70,35 @@ func NewHandler(dependencies Dependencies) http.Handler {
 			return
 		}
 		handleMetrics(response, request, dependencies)
+	})
+	mux.HandleFunc("GET /api/v1/applications", func(response http.ResponseWriter, request *http.Request) {
+		if dependencies.Inventory == nil {
+			writeError(response, http.StatusServiceUnavailable, "application inventory is unavailable")
+			return
+		}
+		writeJSON(response, http.StatusOK, map[string]any{
+			"applications": dependencies.Inventory.List(request.Context()),
+		})
+	})
+	mux.HandleFunc("GET /api/v1/applications/{id}/releases", func(response http.ResponseWriter, request *http.Request) {
+		if dependencies.Inventory == nil {
+			writeError(response, http.StatusServiceUnavailable, "application inventory is unavailable")
+			return
+		}
+		id := request.PathValue("id")
+		releases, err := dependencies.Inventory.Releases(request.Context(), id)
+		if errors.Is(err, inventory.ErrApplicationNotFound) {
+			writeError(response, http.StatusNotFound, "application not found")
+			return
+		}
+		if err != nil {
+			writeError(response, http.StatusInternalServerError, "read release records")
+			return
+		}
+		writeJSON(response, http.StatusOK, map[string]any{
+			"applicationID": id,
+			"releases":      releases,
+		})
 	})
 	mux.Handle("GET /", http.FileServer(http.FS(dependencies.Assets)))
 	return securityHeaders(limitRequestTarget(mux))

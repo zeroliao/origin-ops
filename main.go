@@ -16,6 +16,7 @@ import (
 
 	"origin-ops/internal/api"
 	"origin-ops/internal/config"
+	"origin-ops/internal/inventory"
 	"origin-ops/internal/metrics"
 	"origin-ops/internal/store"
 )
@@ -44,6 +45,7 @@ func main() {
 		slog.Error("initialize metric collector", "error", err)
 		os.Exit(1)
 	}
+	applicationInventory := inventory.New(cfg.Applications)
 
 	rootContext, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
@@ -64,6 +66,7 @@ func main() {
 		SamplingInterval: cfg.SamplingInterval(),
 		MaxQueryDays:     cfg.MaxQueryDays,
 		MaxChartPoints:   cfg.MaxChartPoints,
+		Inventory:        applicationInventory,
 	})
 	server := &http.Server{
 		Addr:              cfg.ListenAddress,

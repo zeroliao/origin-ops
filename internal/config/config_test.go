@@ -48,3 +48,33 @@ func TestValidateRejectsPublicListenAddress(t *testing.T) {
 		t.Fatal("Validate accepted a public listen address")
 	}
 }
+
+func TestValidateApplicationRestrictsHealthChecksToLoopback(t *testing.T) {
+	cfg := Default()
+	cfg.Applications = []Application{{
+		ID:            "console",
+		Name:          "Console",
+		PublicURL:     "https://console.example.com",
+		Services:      []string{"console.service"},
+		HealthURL:     "https://example.com/health",
+		ReleaseRecord: "/var/lib/origin-ops/releases/console.jsonl",
+	}}
+	if err := cfg.Validate(); err == nil || !strings.Contains(err.Error(), "loopback") {
+		t.Fatalf("Validate error = %v", err)
+	}
+}
+
+func TestValidateApplicationAcceptsConfiguredReadOnlySources(t *testing.T) {
+	cfg := Default()
+	cfg.Applications = []Application{{
+		ID:            "console",
+		Name:          "Console",
+		PublicURL:     "https://console.example.com",
+		Services:      []string{"console-api.service", "console-worker.service"},
+		HealthURL:     "http://127.0.0.1:9080/health",
+		ReleaseRecord: "/var/lib/origin-ops/releases/console.jsonl",
+	}}
+	if err := cfg.Validate(); err != nil {
+		t.Fatal(err)
+	}
+}

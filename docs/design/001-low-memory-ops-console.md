@@ -235,9 +235,10 @@ origin-ops (127.0.0.1:9080)
 
 ### Phase B: Read-only inventory
 
-- systemd 状态适配器。
-- HTTP 健康检查适配器。
-- 应用和只读发布记录 API。
+- [x] systemd 状态适配器。
+- [x] HTTP 健康检查适配器。
+- [x] 应用和只读发布记录 API。
+- [ ] 目标服务器实际应用配置与只读查询验收。
 
 ### Phase C: Frontend integration
 

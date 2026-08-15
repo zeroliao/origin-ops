@@ -1,14 +1,17 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"io/fs"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"testing/fstest"
 	"time"
 
+	"origin-ops/internal/inventory"
 	"origin-ops/internal/metrics"
 )
 
@@ -22,6 +25,23 @@ func (s samplerStub) Status() metrics.SamplerStatus {
 
 type metricStoreStub struct {
 	snapshots []metrics.Snapshot
+}
+
+type inventoryStub struct {
+	applications []inventory.Application
+	releases     map[string][]inventory.Release
+}
+
+func (s inventoryStub) List(context.Context) []inventory.Application {
+	return s.applications
+}
+
+func (s inventoryStub) Releases(_ context.Context, id string) ([]inventory.Release, error) {
+	releases, exists := s.releases[id]
+	if !exists {
+		return nil, inventory.ErrApplicationNotFound
+	}
+	return releases, nil
 }
 
 func (s metricStoreStub) Scan(start, end time.Time, visit func(metrics.Snapshot) error) error {
@@ -93,6 +113,32 @@ func TestOverviewReturnsSamplerStatus(t *testing.T) {
 	}
 	if !payload.Sampler.HasLatest || payload.Sampler.Latest.CPUPercent != 22 {
 		t.Fatalf("payload = %+v", payload)
+	}
+}
+
+func TestApplicationsEndpointsReturnConfiguredInventory(t *testing.T) {
+	assets := fstest.MapFS{"index.html": {Data: []byte("ok")}}
+	handler := NewHandler(Dependencies{
+		Assets: assets, Sampler: samplerStub{}, Store: metricStoreStub{},
+		SamplingInterval: time.Minute, MaxQueryDays: 31, MaxChartPoints: 240,
+		Inventory: inventoryStub{
+			applications: []inventory.Application{{ID: "console", Name: "Console"}},
+			releases:     map[string][]inventory.Release{"console": {{Version: "v1"}}},
+		},
+	})
+
+	applicationsRequest := httptest.NewRequest(http.MethodGet, "/api/v1/applications", nil)
+	applicationsResponse := httptest.NewRecorder()
+	handler.ServeHTTP(applicationsResponse, applicationsRequest)
+	if applicationsResponse.Code != http.StatusOK || !strings.Contains(applicationsResponse.Body.String(), "console") {
+		t.Fatalf("applications response = %d %s", applicationsResponse.Code, applicationsResponse.Body.String())
+	}
+
+	releasesRequest := httptest.NewRequest(http.MethodGet, "/api/v1/applications/console/releases", nil)
+	releasesResponse := httptest.NewRecorder()
+	handler.ServeHTTP(releasesResponse, releasesRequest)
+	if releasesResponse.Code != http.StatusOK || !strings.Contains(releasesResponse.Body.String(), "v1") {
+		t.Fatalf("releases response = %d %s", releasesResponse.Code, releasesResponse.Body.String())
 	}
 }
 
