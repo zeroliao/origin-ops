@@ -2,21 +2,25 @@
 
 ## Project Overview
 
-- This repository contains a Chinese-language visual prototype for a self-hosted single-server operations console.
+- Origin Ops is a Chinese-language, self-hosted single-server operations console implemented with Go and an embedded static frontend.
+- The current backend exposes read-only host health and metric history APIs; application inventory integration remains under development.
 - The intended product monitors applications and services, keeps deployment history, and supports version rollback.
 
 ## Conventions
 
-- Keep the prototype dependency-free and suitable for low-resource deployment.
+- Keep the implementation dependency-free and suitable for low-resource deployment.
 - Treat deployment and rollback controls as demonstrations only until a backend and authorization model exist.
 - Preserve Chinese UI copy; keep code identifiers and filenames in English.
 
 ## Commands
 
-| Task              | Command                                       |
-| ----------------- | --------------------------------------------- |
-| JavaScript syntax | `node --check app.js`                         |
-| Local preview     | `python -m http.server 4173 --bind 127.0.0.1` |
+| Task              | Command               |
+| ----------------- | --------------------- |
+| Go tests          | `go test ./...`       |
+| Go vet            | `go vet ./...`        |
+| Go build          | `go build .`          |
+| JavaScript syntax | `node --check app.js` |
+| Local preview     | `go run .`            |
 
 ## Version Management
 
