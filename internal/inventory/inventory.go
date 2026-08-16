@@ -36,6 +36,7 @@ type Health struct {
 type Application struct {
 	ID          string    `json:"id"`
 	Name        string    `json:"name"`
+	Group       string    `json:"group"`
 	Description string    `json:"description"`
 	PublicURL   string    `json:"publicUrl"`
 	Services    []Service `json:"services"`
@@ -112,6 +113,7 @@ func (p *Provider) applicationStatus(ctx context.Context, configured config.Appl
 	return Application{
 		ID:          configured.ID,
 		Name:        configured.Name,
+		Group:       configured.Group,
 		Description: configured.Description,
 		PublicURL:   configured.PublicURL,
 		Services:    services,

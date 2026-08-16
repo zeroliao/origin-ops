@@ -1846,6 +1846,75 @@ body.dark {
     minmax(170px, 1.8fr) minmax(70px, 0.75fr) minmax(70px, 0.65fr)
     minmax(90px, 0.85fr) auto 28px;
 }
+.application-group {
+  border-top: 1px solid var(--border);
+}
+.application-group h3 {
+  margin: 0;
+  font-size: inherit;
+}
+.application-group-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 44px;
+  gap: 16px;
+  padding: 8px 14px;
+  color: var(--text);
+  text-align: left;
+  background: var(--surface-subtle);
+  border: 0;
+  transition: background var(--transition);
+}
+.application-group-toggle:hover {
+  background: #f0f5f3;
+}
+.application-group-name,
+.application-group-stats {
+  display: flex;
+  align-items: center;
+}
+.application-group-name {
+  min-width: 0;
+  gap: 10px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.application-group-name > :last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.group-chevron {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 auto;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform var(--transition);
+}
+.application-group.is-collapsed .group-chevron {
+  transform: rotate(-45deg);
+}
+.application-group-stats {
+  flex: 0 0 auto;
+  gap: 8px;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.application-group-stats span + span::before {
+  margin-right: 8px;
+  color: var(--border);
+  content: "·";
+}
+.application-group-stats .has-attention {
+  color: var(--amber);
+  font-weight: 700;
+}
 .app-row {
   cursor: default;
 }
@@ -1974,6 +2043,12 @@ body.dark .metric-switcher button.is-selected {
 body.dark .app-select {
   color: var(--text);
 }
+body.dark .application-group-toggle {
+  background: #25332f;
+}
+body.dark .application-group-toggle:hover {
+  background: #2b3b36;
+}
 body.dark .quick-link:hover {
   color: #bdd6ff;
   background: #293c58;
@@ -2031,6 +2106,21 @@ body.dark .range-data-table th {
   }
 }
 @media (max-width: 570px) {
+  .application-group-toggle {
+    gap: 8px;
+    padding-right: 12px;
+    padding-left: 12px;
+  }
+  .application-group-stats {
+    align-items: flex-end;
+    flex-direction: column;
+    gap: 0;
+    font-size: 10px;
+    line-height: 1.4;
+  }
+  .application-group-stats span + span::before {
+    content: none;
+  }
   .application-table {
     grid-template-columns: minmax(0, 1fr) auto auto 28px;
   }

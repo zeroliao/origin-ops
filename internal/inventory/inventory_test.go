@@ -20,7 +20,7 @@ func TestListReportsServiceAndHealthStates(t *testing.T) {
 	defer server.Close()
 
 	provider := New([]config.Application{{
-		ID: "console", Name: "Console", PublicURL: "https://console.example.com",
+		ID: "console", Name: "Console", Group: "平台工具", PublicURL: "https://console.example.com",
 		Services: []string{"console.service", "worker.service"}, HealthURL: server.URL,
 		ReleaseRecord: filepath.Join(t.TempDir(), "releases.jsonl"),
 	}})
@@ -37,6 +37,9 @@ func TestListReportsServiceAndHealthStates(t *testing.T) {
 		t.Fatalf("application count = %d", len(applications))
 	}
 	application := applications[0]
+	if application.Group != "平台工具" {
+		t.Fatalf("application group = %q", application.Group)
+	}
 	if application.Services[0].Status != "running" || application.Services[1].Status != "unknown" {
 		t.Fatalf("service states = %+v", application.Services)
 	}

@@ -34,6 +34,7 @@ type Config struct {
 type Application struct {
 	ID            string   `json:"id"`
 	Name          string   `json:"name"`
+	Group         string   `json:"group"`
 	Description   string   `json:"description"`
 	PublicURL     string   `json:"publicUrl"`
 	Services      []string `json:"services"`
@@ -139,6 +140,9 @@ func (a Application) Validate() error {
 	}
 	if strings.TrimSpace(a.Name) == "" {
 		return fmt.Errorf("name is required")
+	}
+	if len(strings.TrimSpace(a.Group)) > 100 {
+		return fmt.Errorf("group must not exceed 100 characters")
 	}
 	if len(strings.TrimSpace(a.Description)) > 500 {
 		return fmt.Errorf("description must not exceed 500 characters")

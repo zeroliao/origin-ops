@@ -14,6 +14,7 @@ const metricDefinitions = {
 
 let applications = [];
 let selectedAppID = null;
+const collapsedApplicationGroups = new Set();
 let activeRange = null;
 let selectedTrendMetric = "cpu";
 let activeChartBounds = null;
@@ -581,6 +582,29 @@ function renderInventoryUnavailable(message) {
     '<li><span class="event-icon info">i</span><div><strong>运行事件尚未接入</strong><span>版本 001 仅提供主机、应用和发布记录读取。</span></div></li>';
 }
 
+function groupApplications() {
+  const groups = new Map();
+  applications.forEach((application, index) => {
+    const name = application.group?.trim() || "未分组";
+    if (!groups.has(name)) groups.set(name, []);
+    groups.get(name).push({ application, index });
+  });
+  return [...groups.entries()];
+}
+
+function renderApplicationRow(application, index) {
+  const [status, className] = applicationHealth(application);
+  const release = latestRelease(application);
+  const releaseTime = release ? formatDateTime(release.finishedAt) : "暂无记录";
+  const version = release?.version || "--";
+  const selected = application.id === selectedAppID;
+  const description = application.description || "未提供功能介绍";
+  const link = application.publicUrl
+    ? `<a class="quick-link" href="${escapeHTML(application.publicUrl)}" target="_blank" rel="noreferrer" aria-label="打开 ${escapeHTML(application.name)}" title="打开 ${escapeHTML(application.name)}"><span>打开</span></a>`
+    : '<span class="quick-link is-disabled" aria-label="无公网入口">--</span>';
+  return `<div class="application-table app-row${selected ? " is-selected" : ""}" data-app="${escapeHTML(application.id)}"><button class="app-select" type="button" data-app="${escapeHTML(application.id)}" aria-label="查看 ${escapeHTML(application.name)} 应用详情"><span class="app-name"><span class="app-avatar ${avatarClass(index)}">${escapeHTML(application.name.slice(0, 1).toUpperCase())}</span><span><strong>${escapeHTML(application.name)}</strong><small title="${escapeHTML(description)}">${escapeHTML(description)}</small></span></span></button><span class="status-pill ${className}"><i></i>${escapeHTML(status)}</span><code>${escapeHTML(version)}</code><time>${escapeHTML(releaseTime)}</time>${link}<span class="row-action" aria-hidden="true">›</span></div>`;
+}
+
 function renderApplications() {
   const container = $("#application-list");
   const header =
@@ -591,23 +615,23 @@ function renderApplications() {
     renderDerivedServiceState();
     return;
   }
-  const rows = applications
-    .map((application, index) => {
-      const [status, className] = applicationHealth(application);
-      const release = latestRelease(application);
-      const releaseTime = release
-        ? formatDateTime(release.finishedAt)
-        : "暂无记录";
-      const version = release?.version || "--";
-      const selected = application.id === selectedAppID;
-      const description = application.description || "未提供功能介绍";
-      const link = application.publicUrl
-        ? `<a class="quick-link" href="${escapeHTML(application.publicUrl)}" target="_blank" rel="noreferrer" aria-label="打开 ${escapeHTML(application.name)}" title="打开 ${escapeHTML(application.name)}"><span>打开</span></a>`
-        : '<span class="quick-link is-disabled" aria-label="无公网入口">--</span>';
-      return `<div class="application-table app-row${selected ? " is-selected" : ""}" data-app="${escapeHTML(application.id)}"><button class="app-select" type="button" data-app="${escapeHTML(application.id)}" aria-label="查看 ${escapeHTML(application.name)} 应用详情"><span class="app-name"><span class="app-avatar ${avatarClass(index)}">${escapeHTML(application.name.slice(0, 1).toUpperCase())}</span><span><strong>${escapeHTML(application.name)}</strong><small title="${escapeHTML(description)}">${escapeHTML(description)}</small></span></span></button><span class="status-pill ${className}"><i></i>${escapeHTML(status)}</span><code>${escapeHTML(version)}</code><time>${escapeHTML(releaseTime)}</time>${link}<span class="row-action" aria-hidden="true">›</span></div>`;
+  const groups = groupApplications()
+    .map(([name, entries], groupIndex) => {
+      const collapsed = collapsedApplicationGroups.has(name);
+      const attentionCount = entries.filter(
+        ({ application }) =>
+          applicationHealth(application)[1] === "is-attention",
+      ).length;
+      const groupID = `application-group-${groupIndex}`;
+      const rows = entries
+        .map(({ application, index }) =>
+          renderApplicationRow(application, index),
+        )
+        .join("");
+      return `<section class="application-group${collapsed ? " is-collapsed" : ""}"><h3><button class="application-group-toggle" type="button" data-group="${escapeHTML(name)}" aria-expanded="${String(!collapsed)}" aria-controls="${groupID}"><span class="application-group-name"><span class="group-chevron" aria-hidden="true"></span><span>${escapeHTML(name)}</span></span><span class="application-group-stats"><span>${entries.length} 个应用</span><span class="${attentionCount ? "has-attention" : ""}">需关注 ${attentionCount}</span></span></button></h3><div id="${groupID}"${collapsed ? " hidden" : ""}>${rows}</div></section>`;
     })
     .join("");
-  container.innerHTML = `${header}${rows}`;
+  container.innerHTML = `${header}${groups}`;
   renderDerivedServiceState();
 }
 
@@ -820,6 +844,22 @@ function bindInteractions() {
     }),
   );
   $("#application-list").addEventListener("click", (event) => {
+    const groupButton = event.target.closest(".application-group-toggle");
+    if (groupButton) {
+      const groupName = groupButton.dataset.group;
+      const groupBody = document.getElementById(
+        groupButton.getAttribute("aria-controls"),
+      );
+      const expanded = groupButton.getAttribute("aria-expanded") === "true";
+      groupButton.setAttribute("aria-expanded", String(!expanded));
+      groupButton
+        .closest(".application-group")
+        .classList.toggle("is-collapsed", expanded);
+      groupBody.hidden = expanded;
+      if (expanded) collapsedApplicationGroups.add(groupName);
+      else collapsedApplicationGroups.delete(groupName);
+      return;
+    }
     const button = event.target.closest(".app-select");
     if (button) selectApplication(button.dataset.app);
   });

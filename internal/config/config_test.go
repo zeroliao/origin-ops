@@ -69,6 +69,7 @@ func TestValidateApplicationAcceptsConfiguredReadOnlySources(t *testing.T) {
 	cfg.Applications = []Application{{
 		ID:            "console",
 		Name:          "Console",
+		Group:         "平台工具",
 		PublicURL:     "https://console.example.com",
 		Services:      []string{"console-api.service", "console-worker.service"},
 		HealthURL:     "http://127.0.0.1:9080/health",
@@ -76,6 +77,19 @@ func TestValidateApplicationAcceptsConfiguredReadOnlySources(t *testing.T) {
 	}}
 	if err := cfg.Validate(); err != nil {
 		t.Fatal(err)
+	}
+}
+
+func TestValidateApplicationRejectsOverlongGroup(t *testing.T) {
+	cfg := Default()
+	cfg.Applications = []Application{{
+		ID:            "console",
+		Name:          "Console",
+		Group:         strings.Repeat("a", 101),
+		ReleaseRecord: "/var/lib/origin-ops/releases/console.jsonl",
+	}}
+	if err := cfg.Validate(); err == nil || !strings.Contains(err.Error(), "group") {
+		t.Fatalf("Validate error = %v", err)
 	}
 }
 

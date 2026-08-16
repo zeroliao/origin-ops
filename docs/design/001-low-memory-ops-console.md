@@ -148,6 +148,7 @@ origin-ops (127.0.0.1:9080)
     {
       "id": "fetchgithub",
       "name": "FetchGitHub",
+      "group": "FetchGitHub",
       "description": "同步和分发 GitHub 项目资源",
       "publicUrl": "https://example.com",
       "services": ["fetchgithub-web.service", "fetchgithub-worker.service"],
@@ -160,6 +161,7 @@ origin-ops (127.0.0.1:9080)
 
 约束：
 
+- `group` 是可选的展示分组；未配置时前端统一归入“未分组”，不影响旧配置加载。
 - 配置了 `publicUrl` 时只允许 `http` 或 `https`；无公网入口的系统服务和内部组件可省略该字段。
 - `healthUrl` 默认只允许 loopback 或明确允许的目标。
 - systemd unit 名必须来自配置，不接受 API 请求传入任意 unit。
