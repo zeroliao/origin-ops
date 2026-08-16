@@ -4,13 +4,14 @@ This document is the authoritative version and release process for this reposito
 
 ## Current Baseline
 
-- The repository is a single Git repository containing a dependency-free static prototype.
+- The repository is a single Git repository containing a dependency-free Go service with an embedded static frontend.
 - The stable branch is `master`.
-- At the time this process was introduced, the repository had no commits, tags, remotes, CI workflows, build artifacts, or production deployment integration.
-- The release unit is the static application formed by `index.html`, `styles.css`, and `app.js`.
+- The repository has an `origin` remote and a production deployment on the host identified by SSH alias `sub2api-cf`; it currently has no CI workflow or artifact registry.
+- The production release unit is the Linux amd64 `origin-ops` binary built from one artifact source commit, together with the reviewed production configuration and systemd unit.
+- Candidate identity includes the artifact source commit, Linux binary SHA-256, `index.html`/`styles.css`/`app.js` SHA-256 values, production configuration SHA-256 and systemd unit SHA-256.
 - UI deployment and rollback actions are demonstrations only. They are not production release operations.
 
-Before creating the first version, establish the initial `master` baseline commit with explicit user authorization.
+The initial `master` baseline exists at `1744489482045b17aa2361c5541aad95456cfefe`.
 
 ## Version Model
 
@@ -88,32 +89,35 @@ Completion signal: development commits and targeted validation results are recor
 ### 3. Create A Candidate
 
 1. Create or fast-forward `release/<version>` to the approved `dev/<version>` commit.
-2. Record the exact release commit.
-3. Compute SHA-256 checksums for `index.html`, `styles.css`, and `app.js`; record them as the immutable candidate identity.
-4. Do not modify normal release content directly on the candidate branch.
+2. Record the exact artifact source commit. Release metadata may be committed afterward without changing that source identity.
+3. Build the Linux amd64 binary from the artifact source commit and compute its SHA-256 together with the SHA-256 values for `index.html`, `styles.css`, and `app.js`.
+4. Record the reviewed production configuration and systemd unit SHA-256 values without recording their contents or secrets.
+5. Do not modify normal release content directly on the candidate branch.
 
-Completion signal: one release commit and one checksum set identify the candidate.
+Completion signal: one artifact source commit and one checksum set identify the candidate.
 
 ### 4. Validate The Candidate
 
-Run validation against the exact release commit:
+Run validation against the exact artifact source commit:
 
-1. Run `node --check app.js`.
-2. Serve the repository over a local HTTP server.
-3. Exercise the primary dashboard flow, time-range validation, metric switching, chart tooltips, application links, release history, and rollback demonstration.
-4. Check representative desktop and mobile viewports for horizontal overflow, clipping, overlap, and console errors.
-5. Record actual commands, viewport sizes, results, warnings, and unverified scenarios.
+1. Run `go test ./... -count=1`, `go vet ./...` and `node --check app.js`.
+2. Run `GOOS=linux GOARCH=amd64 go build` and verify the resulting binary checksum.
+3. Exercise login, logout, session expiry, protected APIs, primary dashboard flow, time-range validation, metric switching, chart tooltips, application links and release history.
+4. Check representative desktop, mobile and dark-theme viewports for horizontal overflow, clipping, overlap and console errors.
+5. On the target host, verify the public health endpoint, anonymous 401 behavior, loopback binding, systemd sandbox, file permissions, application/service descriptions and logs.
+6. Record actual commands, viewport sizes, results, warnings and unverified scenarios.
 
-There is currently no package build, automated test suite, CI workflow, candidate environment, or production deployment gate. Do not claim those validations were performed.
+There is no CI workflow or separate candidate environment. Local isolated Linux smoke tests and the explicitly authorized target-host deployment are the current candidate gates.
 
-Completion signal: syntax and browser acceptance results are recorded against the release commit and checksum set. Change the state to `已提测` only after these checks pass.
+Completion signal: automated, browser and target-host acceptance results are recorded against the artifact source commit and checksum set. Change the state to `已提测` only after these checks pass.
 
 ### 5. Complete A Successful Release
 
-1. Fast-forward `release/<version>` into `master` after validation succeeds.
-2. Change the release record state to `成功` and record the final commit and checksums.
-3. Create `v<version>` at the successful stable commit.
-4. Fast-forward any retained `dev/<version>` branch to the stable archive point, or explicitly delete/archive it.
+1. Confirm the target deployment has an explicit backup, rollback target and user authorization.
+2. Fast-forward `release/<version>` into `master` after candidate and production validation succeed.
+3. Change the release record state to `成功` and record the final stable commit, artifact identity, deployment result and backup paths.
+4. Create `v<version>` at the successful stable commit.
+5. Fast-forward any retained `dev/<version>` branch to the stable archive point, or explicitly delete/archive it.
 
 Completion signal: `master`, `v<version>`, and the successful release record point to the same validated content.
 
@@ -126,9 +130,9 @@ Completion signal: `master`, `v<version>`, and the successful release record poi
 
 ## Rollback
 
-The repository currently has no production deployment or data migration mechanism. Code rollback means selecting the previous successful `v<version>` content and re-running the same static validation before any external deployment.
+Production rollback restores the recorded previous binary, configuration and systemd unit, runs `systemctl daemon-reload`, restarts `origin-ops.service`, and repeats health, authentication boundary and log checks. Metrics, releases and credential data are preserved; version 001 has no database migration.
 
-Do not present the dashboard's rollback demonstration as an actual repository or production rollback. When a real backend and deployment model are added, extend this document with backup, migration, deployment authorization, health verification, and data recovery gates.
+Deployment and rollback actions in the UI remain demonstrations; only the documented host-level procedure is a real deployment operation.
 
 ## Release Record Template
 
@@ -158,9 +162,13 @@ Create `docs/releases/<version>.md` with at least:
 ## Candidate Identity
 
 - Release commit:
+- Artifact source commit:
+- Linux amd64 binary SHA-256:
 - index.html SHA-256:
 - styles.css SHA-256:
 - app.js SHA-256:
+- Production config SHA-256:
+- systemd unit SHA-256:
 
 ## Validation
 
@@ -169,6 +177,13 @@ Create `docs/releases/<version>.md` with at least:
 - Mobile browser acceptance:
 - Console errors:
 - Unverified items:
+
+## Deployment
+
+- Target:
+- Backup paths:
+- Health/authentication/log validation:
+- Rollback procedure:
 
 ## Result
 
