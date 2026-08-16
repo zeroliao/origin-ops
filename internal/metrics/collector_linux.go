@@ -39,7 +39,8 @@ func (c *linuxCollector) Collect() (Snapshot, error) {
 		return Snapshot{}, err
 	}
 	if c.previous == nil {
-		c.previous = &current
+		previous := current
+		c.previous = &previous
 		time.Sleep(250 * time.Millisecond)
 		current, err = readSystemCounters()
 		if err != nil {
