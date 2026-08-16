@@ -1,6 +1,6 @@
 # 001 Low-Memory Operations Console Design
 
-状态：已确认，Phase A-D 与目标 Linux 验收完成；对外访问方案待确认
+状态：已确认，Phase A-D、双层认证实现与目标 Linux 隔离验收完成；Cloudflare Access 配置待人工完成
 版本：001
 基线 commit：`1744489482045b17aa2361c5541aad95456cfefe`
 
@@ -14,6 +14,8 @@
 - 按开始、结束时间查询历史指标，精确到分钟。
 - 对每个时间桶同时返回平均值和峰值，用峰值判断风险。
 - 展示应用、systemd 服务、健康检查、快捷 URL 和只读发布记录。
+- 为每个应用和 systemd 服务展示功能介绍。
+- 使用 Cloudflare Access 外层认证和控制台本地账号形成双层认证。
 - 保留现有中文界面和桌面、移动端交互。
 
 ## 2. 非目标
@@ -76,15 +78,17 @@ origin-ops (127.0.0.1:9080)
 ```text
 /usr/local/bin/origin-ops
 /etc/origin-ops/config.json
+/var/lib/origin-ops/auth/users.json
 /var/lib/origin-ops/metrics/
 /var/lib/origin-ops/releases/
 ```
 
 - 服务仅监听 `127.0.0.1:9080`，不直接暴露公网端口。
 - 使用独立低权限用户 `origin-ops` 运行。
-- 配置文件只保存非敏感应用元数据，不保存 token、private key 或登录凭据。
+- 配置文件只保存非敏感应用元数据和凭据文件路径，不保存 token、private key 或登录凭据。
+- 本地账号存放在权限受限的 JSON 文件中，仅保存 PBKDF2-SHA256 盐值和哈希；会话只保存在内存中。
 - 数据目录只允许 `origin-ops` 写入。
-- 对外访问由现有 Caddy/cloudflared 层负责；正式暴露前必须确认认证方案。
+- 对外访问由现有 Caddy/cloudflared 层负责；正式暴露前必须完成 Cloudflare Access 配置和策略验收。
 
 ## 6. 指标采集
 
@@ -144,6 +148,7 @@ origin-ops (127.0.0.1:9080)
     {
       "id": "fetchgithub",
       "name": "FetchGitHub",
+      "description": "同步和分发 GitHub 项目资源",
       "publicUrl": "https://example.com",
       "services": ["fetchgithub-web.service", "fetchgithub-worker.service"],
       "healthUrl": "http://127.0.0.1:8080/health",
@@ -159,6 +164,7 @@ origin-ops (127.0.0.1:9080)
 - `healthUrl` 默认只允许 loopback 或明确允许的目标。
 - systemd unit 名必须来自配置，不接受 API 请求传入任意 unit。
 - 版本 001 只执行固定参数的 `systemctl show` 查询，不执行 start、stop、restart。
+- systemd 查询只读取固定属性，并将 `Description` 作为服务功能介绍返回。
 - Docker 容器状态不作为 001 的发布门禁，直到运行用户权限方案明确。
 
 ## 8. 发布记录
@@ -177,21 +183,25 @@ origin-ops (127.0.0.1:9080)
 }
 ```
 
-- 控制台只读取记录，不修改项目仓库。
-- 文件写入协议和真正的部署执行器放入后续版本设计。
+- 控制台 HTTP API 只读取记录，不修改项目仓库。
+- 部署脚本可调用 `origin-ops release append`，通过配置中已登记的应用 ID 追加记录；CLI 不接受任意发布文件路径。
+- 真正的部署执行器放入后续版本设计。
 - 不把日志正文、环境变量或认证信息写进发布记录。
 
 ## 9. HTTP API
 
 所有响应使用 JSON，时间使用 RFC3339：
 
-| Method | Path                                 | Purpose                    |
-| ------ | ------------------------------------ | -------------------------- |
-| `GET`  | `/api/v1/health`                     | 进程健康状态               |
-| `GET`  | `/api/v1/overview`                   | 主机信息和最新指标快照     |
-| `GET`  | `/api/v1/metrics`                    | 区间平均值、峰值和采样明细 |
-| `GET`  | `/api/v1/applications`               | 应用、服务和健康状态       |
-| `GET`  | `/api/v1/applications/{id}/releases` | 只读发布记录               |
+| Method   | Path                                 | Purpose                    |
+| -------- | ------------------------------------ | -------------------------- |
+| `GET`    | `/api/v1/health`                     | 进程健康状态               |
+| `GET`    | `/api/v1/session`                    | 查询当前登录会话           |
+| `POST`   | `/api/v1/session`                    | 使用本地账号登录           |
+| `DELETE` | `/api/v1/session`                    | 注销当前会话               |
+| `GET`    | `/api/v1/overview`                   | 主机信息和最新指标快照     |
+| `GET`    | `/api/v1/metrics`                    | 区间平均值、峰值和采样明细 |
+| `GET`    | `/api/v1/applications`               | 应用、服务和健康状态       |
+| `GET`    | `/api/v1/applications/{id}/releases` | 只读发布记录               |
 
 版本 001 不提供部署或回滚 `POST` API。前端调用不存在的变更接口必须失败关闭，不能回退为本地成功提示。
 
@@ -199,12 +209,16 @@ origin-ops (127.0.0.1:9080)
 
 - 进程不以 root 运行。
 - 服务只监听 loopback。
+- 除健康端点外，主机指标、应用、服务和发布记录 API 均要求有效本地会话。
+- 会话 cookie 使用 `HttpOnly` 和 `SameSite=Strict`；改密、启用或禁用账号会立即使旧会话失效。
+- 账号通过 `origin-ops user` CLI 管理，不引入数据库，也不在命令行参数中传递密码。
+- 公网入口必须由 Cloudflare Access 先执行外层访问控制；本地账号认证不能替代该入口门禁。
 - 不读取 Docker socket、SSH private key、项目 secrets 或完整环境变量。
 - HTTP server 设置 header、read、write 和 idle timeout。
 - API 限制 query 长度、时间范围、返回点数和并发查询数。
 - 健康检查禁止跟随到非允许目标，避免 SSRF。
 - 日志不记录 cookies、authorization header 或完整带 query 的敏感 URL。
-- 在确定 Cloudflare Access、Caddy authentication 或仅内网访问之前，不允许公开部署。
+- 在 Cloudflare Access Application 和访问策略验收完成前，不允许公开控制台入口。
 
 未来的部署与回滚能力应由独立受限执行器承担。监控进程只能提交结构化任务，不能获得通用 shell 权限。
 
@@ -250,12 +264,14 @@ origin-ops (127.0.0.1:9080)
 ### Phase D: Deployment preparation
 
 - [x] 生成 systemd unit 和示例配置。
+- [x] 本地凭据文件、用户管理 CLI、内存会话和登录界面。
+- [x] 受限发布记录 CLI，以及应用和服务功能介绍。
 - [x] 本地与目标 Linux 构建验证。
 - [x] 资源测量、安全检查和部署前清单。
 
 Phase D 的资源测量、安全检查和部署步骤已记录在 `docs/deployment.md`。目标主机 `sub2api-cf` 已完成实测：`origin-ops.service` 以 `origin-ops` 用户运行并仅监听 `127.0.0.1:9080`；空闲 RSS 约 11 MB，31 天查询的进程峰值 RSS 为 12,044 KB。纳管配置包含 23 个应用条目和 38 个 systemd 服务。Docker 工作负载只通过已有 loopback HTTP 健康端点纳管，不读取 Docker socket；没有 HTTP 健康端点的容器会明确显示为未配置健康检查。
 
-生产安装和 Caddy/cloudflared 变更必须再次获得用户明确授权。
+生产认证升级已获得用户授权；Cloudflare Access 应用、策略和最终域名仍需管理员在控制台中配置并验收。
 
 ## 13. 验收标准
 
@@ -265,15 +281,16 @@ Phase D 的资源测量、安全检查和部署步骤已记录在 `docs/deployme
 - 采样文件重启后可继续追加，尾部损坏不会破坏之前数据。
 - 无历史数据和部分缺失数据时，界面不显示伪造值。
 - 应用快捷 URL、systemd 状态、健康检查和发布记录来自配置/API。
+- 未登录时受保护 API 返回 401；登录、注销、错误密码和会话失效路径行为正确。
+- 所有已纳管应用和服务均提供功能介绍；无公网 URL 时不生成空链接。
 - 桌面和移动端无横向溢出、文字重叠或图表轴越界，浏览器控制台无错误。
 - 目标服务器实测满足资源预算，或记录偏差和调整结论。
 
-## 14. 待确认项
+## 14. 人工门禁与后续项
 
-以下内容不阻塞本地 Phase A，但在生产部署前必须明确：
+以下事项不由应用自动执行：
 
-- 控制台访问方式：Cloudflare Access、Caddy authentication 或仅内网访问。
-- 实际纳管应用、systemd unit、健康检查 URL 和公开 URL 清单。
-- `sub2api` SSH 超时原因及是否与 `sub2api-cf` 指向同一台服务器。
-- Docker 服务是否需要纳管，以及是否接受只读 socket proxy，而不是直接开放 Docker group 权限。
-- 各项目现有发布记录来源和未来部署执行器的权限模型。
+- 管理员在目标服务器交互初始化首个本地账号，避免密码进入命令历史和日志。
+- 管理员在 Cloudflare 控制台创建 Access Application、访问策略和控制台域名路由，并验证未授权请求被拦截。
+- 各项目部署脚本逐步接入 `origin-ops release append`；真正的部署和回滚执行器仍属于后续版本。
+- `sub2api` SSH alias 的超时不影响当前通过 `sub2api-cf` 管理的目标机，但应单独排查。

@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -19,6 +20,7 @@ const maxReleaseRecords = 100
 
 type Service struct {
 	Name        string `json:"name"`
+	Description string `json:"description"`
 	LoadState   string `json:"loadState"`
 	ActiveState string `json:"activeState"`
 	SubState    string `json:"subState"`
@@ -32,11 +34,12 @@ type Health struct {
 }
 
 type Application struct {
-	ID        string    `json:"id"`
-	Name      string    `json:"name"`
-	PublicURL string    `json:"publicUrl"`
-	Services  []Service `json:"services"`
-	Health    Health    `json:"health"`
+	ID          string    `json:"id"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	PublicURL   string    `json:"publicUrl"`
+	Services    []Service `json:"services"`
+	Health      Health    `json:"health"`
 }
 
 type Release struct {
@@ -107,11 +110,12 @@ func (p *Provider) applicationStatus(ctx context.Context, configured config.Appl
 		services = append(services, p.serviceStatus(ctx, service))
 	}
 	return Application{
-		ID:        configured.ID,
-		Name:      configured.Name,
-		PublicURL: configured.PublicURL,
-		Services:  services,
-		Health:    p.healthStatus(ctx, configured.HealthURL),
+		ID:          configured.ID,
+		Name:        configured.Name,
+		Description: configured.Description,
+		PublicURL:   configured.PublicURL,
+		Services:    services,
+		Health:      p.healthStatus(ctx, configured.HealthURL),
 	}
 }
 
@@ -123,13 +127,16 @@ func (p *Provider) serviceStatus(ctx context.Context, unit string) Service {
 	values := strings.Split(strings.TrimSpace(output), "\n")
 	service := Service{Name: unit, Status: "unknown"}
 	if len(values) > 0 {
-		service.LoadState = values[0]
+		service.Description = values[0]
 	}
 	if len(values) > 1 {
-		service.ActiveState = values[1]
+		service.LoadState = values[1]
 	}
 	if len(values) > 2 {
-		service.SubState = values[2]
+		service.ActiveState = values[2]
+	}
+	if len(values) > 3 {
+		service.SubState = values[3]
 	}
 	switch service.ActiveState {
 	case "active":
@@ -161,7 +168,7 @@ func (p *Provider) healthStatus(ctx context.Context, rawURL string) Health {
 }
 
 func systemctlShow(ctx context.Context, unit string) (string, error) {
-	command := exec.CommandContext(ctx, "systemctl", "show", unit, "--property=LoadState,ActiveState,SubState", "--value")
+	command := exec.CommandContext(ctx, "systemctl", "show", unit, "--property=Description,LoadState,ActiveState,SubState", "--value")
 	output, err := command.Output()
 	if err != nil {
 		return "", err
@@ -210,12 +217,45 @@ func readReleases(path string) ([]Release, error) {
 	return releases, nil
 }
 
+func AppendRelease(path string, release Release) error {
+	if err := validateRelease(release); err != nil {
+		return err
+	}
+	if err := os.MkdirAll(filepath.Dir(path), 0o750); err != nil {
+		return fmt.Errorf("create release record directory: %w", err)
+	}
+	line, err := json.Marshal(release)
+	if err != nil {
+		return fmt.Errorf("encode release record: %w", err)
+	}
+	file, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o640)
+	if err != nil {
+		return fmt.Errorf("open release record: %w", err)
+	}
+	defer file.Close()
+	if _, err := file.Write(append(line, '\n')); err != nil {
+		return fmt.Errorf("append release record: %w", err)
+	}
+	if err := file.Sync(); err != nil {
+		return fmt.Errorf("sync release record: %w", err)
+	}
+	return nil
+}
+
 func validateRelease(release Release) error {
 	if release.Version == "" || release.Commit == "" || release.Status == "" || release.StartedAt.IsZero() || release.FinishedAt.IsZero() {
 		return fmt.Errorf("version, commit, status, startedAt, and finishedAt are required")
 	}
 	if release.FinishedAt.Before(release.StartedAt) {
 		return fmt.Errorf("finishedAt must not be before startedAt")
+	}
+	switch release.Status {
+	case "success", "failed", "rolled_back":
+	default:
+		return fmt.Errorf("status must be success, failed, or rolled_back")
+	}
+	if len(release.Version) > 128 || len(release.Commit) > 128 || len(release.Actor) > 128 || len(release.RollbackTarget) > 128 {
+		return fmt.Errorf("release record fields must not exceed 128 characters")
 	}
 	return nil
 }

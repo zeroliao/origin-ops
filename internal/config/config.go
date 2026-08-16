@@ -15,6 +15,7 @@ import (
 const (
 	defaultListenAddress          = "127.0.0.1:9080"
 	defaultMetricsDir             = "data/metrics"
+	defaultAuthFile               = "data/auth/users.json"
 	defaultSamplingIntervalSecond = 60
 	defaultMaxQueryDays           = 31
 	defaultMaxChartPoints         = 240
@@ -23,6 +24,7 @@ const (
 type Config struct {
 	ListenAddress          string        `json:"listenAddress"`
 	MetricsDir             string        `json:"metricsDir"`
+	AuthFile               string        `json:"authFile"`
 	SamplingIntervalSecond int           `json:"samplingIntervalSeconds"`
 	MaxQueryDays           int           `json:"maxQueryDays"`
 	MaxChartPoints         int           `json:"maxChartPoints"`
@@ -32,6 +34,7 @@ type Config struct {
 type Application struct {
 	ID            string   `json:"id"`
 	Name          string   `json:"name"`
+	Description   string   `json:"description"`
 	PublicURL     string   `json:"publicUrl"`
 	Services      []string `json:"services"`
 	HealthURL     string   `json:"healthUrl"`
@@ -47,6 +50,7 @@ func Default() Config {
 	return Config{
 		ListenAddress:          defaultListenAddress,
 		MetricsDir:             defaultMetricsDir,
+		AuthFile:               defaultAuthFile,
 		SamplingIntervalSecond: defaultSamplingIntervalSecond,
 		MaxQueryDays:           defaultMaxQueryDays,
 		MaxChartPoints:         defaultMaxChartPoints,
@@ -104,6 +108,9 @@ func (c Config) Validate() error {
 	if c.MetricsDir == "" {
 		return fmt.Errorf("metricsDir is required")
 	}
+	if c.AuthFile == "" {
+		return fmt.Errorf("authFile is required")
+	}
 	if c.SamplingIntervalSecond < 10 || c.SamplingIntervalSecond > 3600 {
 		return fmt.Errorf("samplingIntervalSeconds must be between 10 and 3600")
 	}
@@ -132,6 +139,9 @@ func (a Application) Validate() error {
 	}
 	if strings.TrimSpace(a.Name) == "" {
 		return fmt.Errorf("name is required")
+	}
+	if len(strings.TrimSpace(a.Description)) > 500 {
+		return fmt.Errorf("description must not exceed 500 characters")
 	}
 	if a.PublicURL != "" {
 		if err := validateWebURL(a.PublicURL, false); err != nil {

@@ -18,6 +18,7 @@ let activeRange = null;
 let selectedTrendMetric = "cpu";
 let activeChartBounds = null;
 let toastTimeout;
+let currentUsername = "";
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
@@ -48,18 +49,48 @@ function showToast(message, isError = false) {
   );
 }
 
-async function requestJSON(path) {
+async function requestJSON(path, options = {}) {
   const response = await fetch(path, {
-    headers: { Accept: "application/json" },
+    ...options,
+    credentials: "same-origin",
+    headers: { Accept: "application/json", ...(options.headers || {}) },
   });
+  if (response.status === 204) return null;
   let payload = null;
   try {
     payload = await response.json();
   } catch {
     throw new Error("后端返回了无效响应");
   }
-  if (!response.ok) throw new Error(payload.error || "请求失败");
+  if (!response.ok) {
+    const error = new Error(payload.error || "请求失败");
+    error.status = response.status;
+    if (response.status === 401 && path !== "/api/v1/session") {
+      showLogin("登录已失效，请重新登录。");
+    }
+    throw error;
+  }
   return payload;
+}
+
+function showLogin(message = "") {
+  $("#app-shell").hidden = true;
+  $("#auth-gate").hidden = false;
+  $("#auth-status").hidden = true;
+  $("#login-form").hidden = false;
+  $("#login-error").textContent = message;
+  $("#account-menu").hidden = true;
+  $("#profile-button").setAttribute("aria-expanded", "false");
+  $("#login-username").focus();
+}
+
+function showDashboard(username) {
+  currentUsername = username || "operator";
+  $("#auth-gate").hidden = true;
+  $("#app-shell").hidden = false;
+  $("#account-name").textContent = currentUsername;
+  $("#profile-button").textContent = currentUsername.slice(0, 1).toUpperCase();
+  $("#profile-button").ariaLabel = `${currentUsername} 账户菜单`;
 }
 
 function pad(value) {
@@ -512,7 +543,7 @@ function avatarClass(index) {
 
 function renderDerivedServiceState() {
   const services = applications.flatMap((application) =>
-    application.services.map((service) => ({ ...service, application })),
+    application.services.map((service) => ({ service, application })),
   );
   $("#nav-app-count").textContent = String(applications.length);
   $("#nav-service-count").textContent = String(services.length);
@@ -527,7 +558,8 @@ function renderDerivedServiceState() {
             service.status === "unknown"
               ? "状态不可读取"
               : `${service.activeState || service.status}${service.subState ? ` · ${service.subState}` : ""}`;
-          return `<li><span class="service-health ${healthy ? "is-healthy" : "is-attention"}"></span><div><strong>${escapeHTML(service.name)}</strong><span>${escapeHTML(application.name)} · ${escapeHTML(detail)}</span></div><code>${escapeHTML(service.status || "unknown")}</code></li>`;
+          const description = service.description || "未提供功能介绍";
+          return `<li><span class="service-health ${healthy ? "is-healthy" : "is-attention"}"></span><div><strong>${escapeHTML(service.name)}</strong><span>${escapeHTML(description)}</span><small>${escapeHTML(application.name)} · ${escapeHTML(detail)}</small></div><code>${escapeHTML(service.status || "unknown")}</code></li>`;
         })
         .join("")
     : '<li><span class="service-health is-attention"></span><div><strong>暂无登记服务</strong><span>应用配置为空或未设置 systemd unit。</span></div><code>--</code></li>';
@@ -568,8 +600,11 @@ function renderApplications() {
         : "暂无记录";
       const version = release?.version || "--";
       const selected = application.id === selectedAppID;
-      const safeURL = escapeHTML(application.publicUrl);
-      return `<div class="application-table app-row${selected ? " is-selected" : ""}" data-app="${escapeHTML(application.id)}"><button class="app-select" type="button" data-app="${escapeHTML(application.id)}" aria-label="查看 ${escapeHTML(application.name)} 应用详情"><span class="app-name"><span class="app-avatar ${avatarClass(index)}">${escapeHTML(application.name.slice(0, 1).toUpperCase())}</span><span><strong>${escapeHTML(application.name)}</strong><small>systemd · ${application.services.length} 个服务</small></span></span></button><span class="status-pill ${className}"><i></i>${escapeHTML(status)}</span><code>${escapeHTML(version)}</code><time>${escapeHTML(releaseTime)}</time><a class="quick-link" href="${safeURL}" target="_blank" rel="noreferrer" aria-label="打开 ${escapeHTML(application.name)}" title="打开 ${escapeHTML(application.name)}"><span>打开</span></a><span class="row-action" aria-hidden="true">›</span></div>`;
+      const description = application.description || "未提供功能介绍";
+      const link = application.publicUrl
+        ? `<a class="quick-link" href="${escapeHTML(application.publicUrl)}" target="_blank" rel="noreferrer" aria-label="打开 ${escapeHTML(application.name)}" title="打开 ${escapeHTML(application.name)}"><span>打开</span></a>`
+        : '<span class="quick-link is-disabled" aria-label="无公网入口">--</span>';
+      return `<div class="application-table app-row${selected ? " is-selected" : ""}" data-app="${escapeHTML(application.id)}"><button class="app-select" type="button" data-app="${escapeHTML(application.id)}" aria-label="查看 ${escapeHTML(application.name)} 应用详情"><span class="app-name"><span class="app-avatar ${avatarClass(index)}">${escapeHTML(application.name.slice(0, 1).toUpperCase())}</span><span><strong>${escapeHTML(application.name)}</strong><small title="${escapeHTML(description)}">${escapeHTML(description)}</small></span></span></button><span class="status-pill ${className}"><i></i>${escapeHTML(status)}</span><code>${escapeHTML(version)}</code><time>${escapeHTML(releaseTime)}</time>${link}<span class="row-action" aria-hidden="true">›</span></div>`;
     })
     .join("");
   container.innerHTML = `${header}${rows}`;
@@ -589,6 +624,7 @@ function renderApplicationDetail(application) {
   if (!application) {
     avatar.textContent = "--";
     $("#detail-name").textContent = "暂无应用";
+    $("#detail-description").textContent = "没有可显示的应用介绍。";
     $("#detail-url").textContent = "等待配置";
     $("#detail-url").removeAttribute("href");
     $("#detail-check").textContent = "未配置健康检查";
@@ -605,9 +641,17 @@ function renderApplicationDetail(application) {
   avatar.textContent = application.name.slice(0, 1).toUpperCase();
   avatar.className = `app-avatar ${avatarClass(index)}`;
   $("#detail-name").textContent = application.name;
-  $("#detail-url").href = application.publicUrl;
-  $("#detail-url").childNodes[0].nodeValue =
-    `${new URL(application.publicUrl).host} `;
+  $("#detail-description").textContent =
+    application.description || "未提供功能介绍。";
+  const detailURL = $("#detail-url");
+  if (application.publicUrl) {
+    detailURL.hidden = false;
+    detailURL.href = application.publicUrl;
+    detailURL.childNodes[0].nodeValue = `${new URL(application.publicUrl).host} `;
+  } else {
+    detailURL.hidden = true;
+    detailURL.removeAttribute("href");
+  }
   const healthTime = application.health.checkedAt
     ? ` · ${formatDateTime(application.health.checkedAt)}`
     : "";
@@ -692,6 +736,62 @@ async function loadRange(start, end) {
   } finally {
     $("#time-range-form button[type='submit']").disabled = false;
   }
+}
+
+function bindAuthentication() {
+  $("#login-form").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const button = form.querySelector("button[type='submit']");
+    const username = $("#login-username").value.trim();
+    const password = $("#login-password").value;
+    $("#login-error").textContent = "";
+    button.disabled = true;
+    button.textContent = "登录中";
+    try {
+      const session = await requestJSON("/api/v1/session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
+      $("#login-password").value = "";
+      showDashboard(session.username);
+      await loadDashboard();
+    } catch (error) {
+      $("#login-password").value = "";
+      $("#login-error").textContent =
+        error.status === 429
+          ? "登录尝试过多，请稍后再试。"
+          : error.status === 401
+            ? "账号或密码不正确。"
+            : "认证服务暂时不可用。";
+      $("#login-password").focus();
+    } finally {
+      button.disabled = false;
+      button.textContent = "登录";
+    }
+  });
+
+  $("#profile-button").addEventListener("click", () => {
+    const menu = $("#account-menu");
+    menu.hidden = !menu.hidden;
+    $("#profile-button").setAttribute("aria-expanded", String(!menu.hidden));
+  });
+  $("#logout-button").addEventListener("click", async (event) => {
+    event.currentTarget.disabled = true;
+    try {
+      await requestJSON("/api/v1/session", { method: "DELETE" });
+    } finally {
+      currentUsername = "";
+      showLogin();
+      event.currentTarget.disabled = false;
+    }
+  });
+  document.addEventListener("click", (event) => {
+    if (event.target.closest(".account-control")) return;
+    $("#account-menu").hidden = true;
+    $("#profile-button").setAttribute("aria-expanded", "false");
+  });
 }
 
 function bindInteractions() {
@@ -786,6 +886,27 @@ function bindInteractions() {
   bindTrendChartInteractions();
 }
 
+async function loadDashboard() {
+  try {
+    const [overview] = await Promise.all([
+      requestJSON("/api/v1/overview"),
+      loadApplications(),
+      loadRange(
+        new Date($("#range-start").value),
+        new Date($("#range-end").value),
+      ),
+    ]);
+    renderOverview(overview);
+    setDataBadge("后端已连接");
+  } catch (error) {
+    if (error.status === 401) return;
+    setOverviewUnavailable(`后端不可用：${error.message}`);
+    renderInventoryUnavailable(`后端不可用：${error.message}`);
+    setDataBadge("后端不可用", true);
+    showToast(`无法连接后端：${error.message}`, true);
+  }
+}
+
 async function initialize() {
   const end = new Date();
   end.setSeconds(0, 0);
@@ -794,19 +915,17 @@ async function initialize() {
   $("#range-end").value = formatDateInput(end);
   renderEmptyTrend("正在连接后端");
   bindInteractions();
+  bindAuthentication();
   try {
-    const [overview] = await Promise.all([
-      requestJSON("/api/v1/overview"),
-      loadApplications(),
-      loadRange(start, end),
-    ]);
-    renderOverview(overview);
-    setDataBadge("后端已连接");
+    const session = await requestJSON("/api/v1/session");
+    if (!session.authenticated) {
+      showLogin();
+      return;
+    }
+    showDashboard(session.username);
+    await loadDashboard();
   } catch (error) {
-    setOverviewUnavailable(`后端不可用：${error.message}`);
-    renderInventoryUnavailable(`后端不可用：${error.message}`);
-    setDataBadge("后端不可用", true);
-    showToast(`无法连接后端：${error.message}`, true);
+    showLogin("无法验证登录状态，请稍后重试。");
   }
 }
 

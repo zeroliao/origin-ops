@@ -1,6 +1,7 @@
 {
   "listenAddress": "127.0.0.1:9080",
   "metricsDir": "/var/lib/origin-ops/metrics",
+  "authFile": "/var/lib/origin-ops/auth/users.json",
   "samplingIntervalSeconds": 60,
   "maxQueryDays": 31,
   "maxChartPoints": 240,

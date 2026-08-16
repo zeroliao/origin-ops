@@ -10,7 +10,46 @@
   </head>
   <body>
     <a class="skip-link" href="#main-content">跳至主要内容</a>
-    <div class="app-shell">
+    <div class="auth-gate" id="auth-gate">
+      <section class="auth-panel" aria-labelledby="login-title">
+        <div class="auth-brand">
+          <span class="brand-mark" aria-hidden="true"
+            ><i></i><i></i><i></i
+          ></span>
+          <span>origin<span class="brand-dot">.</span>ops</span>
+        </div>
+        <div class="auth-status" id="auth-status" role="status">
+          正在验证登录状态
+        </div>
+        <form id="login-form" hidden>
+          <h1 id="login-title">登录控制台</h1>
+          <div class="field-group">
+            <label for="login-username">账号</label>
+            <input
+              id="login-username"
+              name="username"
+              autocomplete="username"
+              required
+              maxlength="64"
+            />
+          </div>
+          <div class="field-group">
+            <label for="login-password">密码</label>
+            <input
+              id="login-password"
+              name="password"
+              type="password"
+              autocomplete="current-password"
+              required
+              maxlength="1024"
+            />
+          </div>
+          <div class="auth-error" id="login-error" role="alert"></div>
+          <button class="primary-button auth-submit" type="submit">登录</button>
+        </form>
+      </section>
+    </div>
+    <div class="app-shell" id="app-shell" hidden>
       <aside class="sidebar" aria-label="主导航">
         <div class="brand">
           <span class="brand-mark" aria-hidden="true"
@@ -141,9 +180,21 @@
                 <path d="M16 8h5V3" />
               </svg>
             </button>
-            <button class="profile-button" type="button" aria-label="账户菜单">
-              Z
-            </button>
+            <div class="account-control">
+              <button
+                class="profile-button"
+                id="profile-button"
+                type="button"
+                aria-label="账户菜单"
+                aria-expanded="false"
+              >
+                Z
+              </button>
+              <div class="account-menu" id="account-menu" hidden>
+                <strong id="account-name">--</strong>
+                <button id="logout-button" type="button">退出登录</button>
+              </div>
+            </div>
           </div>
         </header>
 
@@ -641,6 +692,9 @@
                     ></a>
                   </div>
                 </div>
+                <p class="detail-description" id="detail-description">
+                  等待读取应用介绍。
+                </p>
                 <dl class="detail-facts">
                   <div>
                     <dt>健康检查</dt>

@@ -11,6 +11,7 @@ import (
 	"testing/fstest"
 	"time"
 
+	"origin-ops/internal/authn"
 	"origin-ops/internal/inventory"
 	"origin-ops/internal/metrics"
 )
@@ -31,6 +32,23 @@ type inventoryStub struct {
 	applications []inventory.Application
 	releases     map[string][]inventory.Release
 }
+
+type authenticationStub struct {
+	authenticated bool
+}
+
+func (s authenticationStub) Login(username, _ string) (string, authn.Principal, time.Time, bool, error) {
+	return "test-token", authn.Principal{Username: username, Revision: 1}, time.Now().Add(time.Hour), true, nil
+}
+
+func (s authenticationStub) Current(token string) (authn.Principal, bool, error) {
+	if !s.authenticated || token != "test-token" {
+		return authn.Principal{}, false, nil
+	}
+	return authn.Principal{Username: "tester", Revision: 1}, true, nil
+}
+
+func (authenticationStub) Logout(string) {}
 
 func (s inventoryStub) List(context.Context) []inventory.Application {
 	return s.applications
@@ -81,10 +99,42 @@ func TestAggregateReturnsAveragePeakAndMissingState(t *testing.T) {
 func TestMetricsEndpointValidatesMinutePrecision(t *testing.T) {
 	handler := testHandler(t, metricStoreStub{})
 	request := httptest.NewRequest(http.MethodGet, "/api/v1/metrics?start=2026-08-15T00:00:01Z&end=2026-08-15T01:00:00Z", nil)
+	request.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "test-token"})
 	response := httptest.NewRecorder()
 	handler.ServeHTTP(response, request)
 	if response.Code != http.StatusBadRequest {
 		t.Fatalf("status = %d", response.Code)
+	}
+}
+
+func TestProtectedEndpointRejectsAnonymousRequest(t *testing.T) {
+	assets := fstest.MapFS{"index.html": {Data: []byte("ok")}}
+	handler := NewHandler(Dependencies{
+		Assets: assets, Sampler: samplerStub{}, Store: metricStoreStub{},
+		SamplingInterval: time.Minute, MaxQueryDays: 31, MaxChartPoints: 240,
+		Authentication: authenticationStub{},
+	})
+	request := httptest.NewRequest(http.MethodGet, "/api/v1/overview", nil)
+	response := httptest.NewRecorder()
+	handler.ServeHTTP(response, request)
+	if response.Code != http.StatusUnauthorized {
+		t.Fatalf("status = %d", response.Code)
+	}
+}
+
+func TestSessionEndpointReturnsCurrentUser(t *testing.T) {
+	assets := fstest.MapFS{"index.html": {Data: []byte("ok")}}
+	handler := NewHandler(Dependencies{
+		Assets: assets, Sampler: samplerStub{}, Store: metricStoreStub{},
+		SamplingInterval: time.Minute, MaxQueryDays: 31, MaxChartPoints: 240,
+		Authentication: authenticationStub{authenticated: true},
+	})
+	request := httptest.NewRequest(http.MethodGet, "/api/v1/session", nil)
+	request.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "test-token"})
+	response := httptest.NewRecorder()
+	handler.ServeHTTP(response, request)
+	if response.Code != http.StatusOK || !strings.Contains(response.Body.String(), "tester") {
+		t.Fatalf("session response = %d %s", response.Code, response.Body.String())
 	}
 }
 
@@ -98,8 +148,10 @@ func TestOverviewReturnsSamplerStatus(t *testing.T) {
 		}},
 		Store: metricStoreStub{}, SamplingInterval: time.Minute,
 		MaxQueryDays: 31, MaxChartPoints: 240,
+		Authentication: authenticationStub{authenticated: true},
 	})
 	request := httptest.NewRequest(http.MethodGet, "/api/v1/overview", nil)
+	request.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "test-token"})
 	response := httptest.NewRecorder()
 	handler.ServeHTTP(response, request)
 	if response.Code != http.StatusOK {
@@ -125,9 +177,11 @@ func TestApplicationsEndpointsReturnConfiguredInventory(t *testing.T) {
 			applications: []inventory.Application{{ID: "console", Name: "Console"}},
 			releases:     map[string][]inventory.Release{"console": {{Version: "v1"}}},
 		},
+		Authentication: authenticationStub{authenticated: true},
 	})
 
 	applicationsRequest := httptest.NewRequest(http.MethodGet, "/api/v1/applications", nil)
+	applicationsRequest.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "test-token"})
 	applicationsResponse := httptest.NewRecorder()
 	handler.ServeHTTP(applicationsResponse, applicationsRequest)
 	if applicationsResponse.Code != http.StatusOK || !strings.Contains(applicationsResponse.Body.String(), "console") {
@@ -135,6 +189,7 @@ func TestApplicationsEndpointsReturnConfiguredInventory(t *testing.T) {
 	}
 
 	releasesRequest := httptest.NewRequest(http.MethodGet, "/api/v1/applications/console/releases", nil)
+	releasesRequest.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "test-token"})
 	releasesResponse := httptest.NewRecorder()
 	handler.ServeHTTP(releasesResponse, releasesRequest)
 	if releasesResponse.Code != http.StatusOK || !strings.Contains(releasesResponse.Body.String(), "v1") {
@@ -148,5 +203,6 @@ func testHandler(t *testing.T, store MetricStore) http.Handler {
 	return NewHandler(Dependencies{
 		Assets: assets, Sampler: samplerStub{}, Store: store,
 		SamplingInterval: time.Minute, MaxQueryDays: 31, MaxChartPoints: 240,
+		Authentication: authenticationStub{authenticated: true},
 	})
 }

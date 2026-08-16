@@ -7,6 +7,7 @@
 ```text
 /usr/local/bin/origin-ops
 /etc/origin-ops/config.json
+/var/lib/origin-ops/auth/users.json
 /var/lib/origin-ops/metrics/
 /var/lib/origin-ops/releases/
 /etc/systemd/system/origin-ops.service
@@ -23,6 +24,7 @@ go test ./...
 go vet ./...
 GOOS=linux GOARCH=amd64 go build -o origin-ops .
 
+sudo install -d -o origin-ops -g origin-ops -m 0700 /var/lib/origin-ops/auth
 sudo install -d -o origin-ops -g origin-ops -m 0750 \
   /var/lib/origin-ops/metrics /var/lib/origin-ops/releases
 sudo install -d -m 0755 /etc/origin-ops
@@ -39,15 +41,53 @@ sudo systemctl --no-pager --full status origin-ops.service
 
 `config.json` 必须使用 loopback `listenAddress`，应用的 `healthUrl` 只能指向允许的 loopback 地址；不要直接复制 `config.example.json` 中的路径到不存在的生产目录。
 
+## 本地账号初始化
+
+Origin Ops 不引入数据库。账号文件只保存 PBKDF2-SHA256 盐值和哈希，不保存明文密码。首次初始化必须由管理员在服务器交互输入密码，不要把密码写进命令历史、配置文件或提交记录：
+
+```bash
+read -r -s ORIGIN_OPS_PASSWORD
+printf '%s\n' "$ORIGIN_OPS_PASSWORD" | \
+  sudo -u origin-ops /usr/local/bin/origin-ops user add \
+  --config /etc/origin-ops/config.json --username <username> --password-stdin
+unset ORIGIN_OPS_PASSWORD
+```
+
+后续账号操作：
+
+```bash
+sudo -u origin-ops /usr/local/bin/origin-ops user list --config /etc/origin-ops/config.json
+printf '%s\n' "$ORIGIN_OPS_PASSWORD" | sudo -u origin-ops \
+  /usr/local/bin/origin-ops user set-password \
+  --config /etc/origin-ops/config.json --username <username> --password-stdin
+sudo -u origin-ops /usr/local/bin/origin-ops user disable \
+  --config /etc/origin-ops/config.json --username <username>
+```
+
+改密、启用或禁用用户会立即使旧会话失效；服务重启也会清除内存会话。
+
+## 发布记录接入
+
+部署脚本只应通过已登记应用 ID 追加 JSONL 记录，不能传入任意文件路径：
+
+```bash
+/usr/local/bin/origin-ops release append \
+  --config /etc/origin-ops/config.json --application <id> \
+  --version <version> --commit <commit> --status success \
+  --started-at <RFC3339> --finished-at <RFC3339> --actor <actor> \
+  --rollback-target <version>
+```
+
 ## 反向代理与认证
 
-Origin Ops 只监听 `127.0.0.1:9080`，不应直接暴露公网。接入现有 Caddy、cloudflared 或其他代理前，必须先确定 Cloudflare Access、Caddy authentication 或仅内网访问方案，并验证未认证请求不会到达该控制台。版本 001 不修改现有代理配置。
+Origin Ops 只监听 `127.0.0.1:9080`，不应直接暴露公网。当前选择 Cloudflare Access 作为外层认证，控制台自身再使用本地账号登录；Cloudflare Access 应在控制台域名对外开放前由管理员在 Cloudflare 控制台创建并验证策略。版本 001 不自动修改现有代理配置。
 
 ## 安全检查
 
 - `systemctl cat origin-ops.service` 中确认 `User=origin-ops`、`ProtectSystem=strict` 和 `NoNewPrivileges=true`。
 - `ss -ltnp` 确认只监听 `127.0.0.1:9080`。
 - 检查配置、发布记录和指标目录权限，不允许其他用户写入。
+- 检查 `/var/lib/origin-ops/auth/users.json` 为 `0600`，认证目录为 `0700`。
 - 确认服务账户不属于 `docker` 组，不读取 Docker socket、SSH 私钥或完整环境变量。
 - 使用异常、超长和重定向健康检查 URL 验证 API 返回失败关闭，不发生外连跳转。
 - 查看 `journalctl -u origin-ops.service`，确认日志不包含 authorization、cookie 或敏感 query。

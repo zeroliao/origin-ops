@@ -15,16 +15,34 @@ import (
 	"time"
 
 	"origin-ops/internal/api"
+	"origin-ops/internal/authn"
 	"origin-ops/internal/config"
 	"origin-ops/internal/inventory"
 	"origin-ops/internal/metrics"
+	"origin-ops/internal/releasecli"
 	"origin-ops/internal/store"
+	"origin-ops/internal/usercli"
 )
 
 //go:embed index.html styles.css app.js
 var staticFiles embed.FS
 
 func main() {
+	if len(os.Args) > 1 && os.Args[1] == "user" {
+		if err := usercli.Run(os.Args[2:], os.Stdin, os.Stdout); err != nil {
+			fmt.Fprintf(os.Stderr, "manage users: %v\n", err)
+			os.Exit(1)
+		}
+		return
+	}
+	if len(os.Args) > 1 && os.Args[1] == "release" {
+		if err := releasecli.Run(os.Args[2:], os.Stdout); err != nil {
+			fmt.Fprintf(os.Stderr, "record release: %v\n", err)
+			os.Exit(1)
+		}
+		return
+	}
+
 	configPath := flag.String("config", "", "path to an optional JSON configuration file")
 	flag.Parse()
 
@@ -46,6 +64,12 @@ func main() {
 		os.Exit(1)
 	}
 	applicationInventory := inventory.New(cfg.Applications)
+	credentialStore := authn.NewStore(cfg.AuthFile)
+	if err := credentialStore.CheckPermissions(); err != nil {
+		slog.Error("validate credential file", "error", err)
+		os.Exit(1)
+	}
+	authentication := authn.NewManager(credentialStore, 12*time.Hour)
 
 	rootContext, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
@@ -67,6 +91,7 @@ func main() {
 		MaxQueryDays:     cfg.MaxQueryDays,
 		MaxChartPoints:   cfg.MaxChartPoints,
 		Inventory:        applicationInventory,
+		Authentication:   authentication,
 	})
 	server := &http.Server{
 		Addr:              cfg.ListenAddress,

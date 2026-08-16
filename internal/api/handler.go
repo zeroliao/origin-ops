@@ -7,12 +7,15 @@ import (
 	"fmt"
 	"io/fs"
 	"math"
+	"net"
 	"net/http"
 	"os"
 	"runtime"
 	"strings"
+	"sync"
 	"time"
 
+	"origin-ops/internal/authn"
 	"origin-ops/internal/inventory"
 	"origin-ops/internal/metrics"
 )
@@ -30,6 +33,12 @@ type ApplicationInventory interface {
 	Releases(context.Context, string) ([]inventory.Release, error)
 }
 
+type Authentication interface {
+	Login(string, string) (string, authn.Principal, time.Time, bool, error)
+	Current(string) (authn.Principal, bool, error)
+	Logout(string)
+}
+
 type Dependencies struct {
 	Assets           fs.FS
 	Sampler          Sampler
@@ -38,18 +47,46 @@ type Dependencies struct {
 	MaxQueryDays     int
 	MaxChartPoints   int
 	Inventory        ApplicationInventory
+	Authentication   Authentication
 }
+
+const sessionCookieName = "origin_ops_session"
 
 func NewHandler(dependencies Dependencies) http.Handler {
 	mux := http.NewServeMux()
 	querySlots := make(chan struct{}, 4)
+	loginAttempts := newLoginLimiter(5, 15*time.Minute)
 	mux.HandleFunc("GET /api/v1/health", func(response http.ResponseWriter, request *http.Request) {
 		writeJSON(response, http.StatusOK, map[string]any{
 			"status": "ok",
 			"time":   time.Now().UTC(),
 		})
 	})
-	mux.HandleFunc("GET /api/v1/overview", func(response http.ResponseWriter, request *http.Request) {
+	mux.HandleFunc("GET /api/v1/session", func(response http.ResponseWriter, request *http.Request) {
+		principal, authenticated, err := currentPrincipal(dependencies.Authentication, request)
+		if err != nil {
+			writeError(response, http.StatusServiceUnavailable, "authentication is unavailable")
+			return
+		}
+		response.Header().Set("Cache-Control", "no-store")
+		writeJSON(response, http.StatusOK, map[string]any{
+			"authenticated": authenticated,
+			"username":      principal.Username,
+		})
+	})
+	mux.HandleFunc("POST /api/v1/session", func(response http.ResponseWriter, request *http.Request) {
+		handleLogin(response, request, dependencies.Authentication, loginAttempts)
+	})
+	mux.HandleFunc("DELETE /api/v1/session", func(response http.ResponseWriter, request *http.Request) {
+		if dependencies.Authentication != nil {
+			if cookie, err := request.Cookie(sessionCookieName); err == nil {
+				dependencies.Authentication.Logout(cookie.Value)
+			}
+		}
+		clearSessionCookie(response, request)
+		response.WriteHeader(http.StatusNoContent)
+	})
+	mux.Handle("GET /api/v1/overview", requireAuthentication(dependencies.Authentication, http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
 		hostname, _ := os.Hostname()
 		writeJSON(response, http.StatusOK, map[string]any{
 			"host": map[string]any{
@@ -60,8 +97,8 @@ func NewHandler(dependencies Dependencies) http.Handler {
 			},
 			"sampler": dependencies.Sampler.Status(),
 		})
-	})
-	mux.HandleFunc("GET /api/v1/metrics", func(response http.ResponseWriter, request *http.Request) {
+	})))
+	mux.Handle("GET /api/v1/metrics", requireAuthentication(dependencies.Authentication, http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
 		select {
 		case querySlots <- struct{}{}:
 			defer func() { <-querySlots }()
@@ -70,8 +107,8 @@ func NewHandler(dependencies Dependencies) http.Handler {
 			return
 		}
 		handleMetrics(response, request, dependencies)
-	})
-	mux.HandleFunc("GET /api/v1/applications", func(response http.ResponseWriter, request *http.Request) {
+	})))
+	mux.Handle("GET /api/v1/applications", requireAuthentication(dependencies.Authentication, http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
 		if dependencies.Inventory == nil {
 			writeError(response, http.StatusServiceUnavailable, "application inventory is unavailable")
 			return
@@ -79,8 +116,8 @@ func NewHandler(dependencies Dependencies) http.Handler {
 		writeJSON(response, http.StatusOK, map[string]any{
 			"applications": dependencies.Inventory.List(request.Context()),
 		})
-	})
-	mux.HandleFunc("GET /api/v1/applications/{id}/releases", func(response http.ResponseWriter, request *http.Request) {
+	})))
+	mux.Handle("GET /api/v1/applications/{id}/releases", requireAuthentication(dependencies.Authentication, http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
 		if dependencies.Inventory == nil {
 			writeError(response, http.StatusServiceUnavailable, "application inventory is unavailable")
 			return
@@ -99,9 +136,144 @@ func NewHandler(dependencies Dependencies) http.Handler {
 			"applicationID": id,
 			"releases":      releases,
 		})
-	})
+	})))
 	mux.Handle("GET /", http.FileServer(http.FS(dependencies.Assets)))
 	return securityHeaders(limitRequestTarget(mux))
+}
+
+type loginRequest struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
+func handleLogin(response http.ResponseWriter, request *http.Request, authentication Authentication, limiter *loginLimiter) {
+	response.Header().Set("Cache-Control", "no-store")
+	if authentication == nil {
+		writeError(response, http.StatusServiceUnavailable, "authentication is unavailable")
+		return
+	}
+	var credentials loginRequest
+	decoder := json.NewDecoder(http.MaxBytesReader(response, request.Body, 4096))
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(&credentials); err != nil {
+		writeError(response, http.StatusBadRequest, "invalid login request")
+		return
+	}
+	key := strings.ToLower(strings.TrimSpace(credentials.Username)) + "|" + clientAddress(request)
+	if !limiter.Allow(key) {
+		writeError(response, http.StatusTooManyRequests, "too many login attempts")
+		return
+	}
+	token, principal, expiresAt, valid, err := authentication.Login(credentials.Username, credentials.Password)
+	credentials.Password = ""
+	if err != nil {
+		writeError(response, http.StatusServiceUnavailable, "authentication is unavailable")
+		return
+	}
+	if !valid {
+		limiter.Failure(key)
+		writeError(response, http.StatusUnauthorized, "invalid username or password")
+		return
+	}
+	limiter.Success(key)
+	http.SetCookie(response, &http.Cookie{
+		Name: sessionCookieName, Value: token, Path: "/", HttpOnly: true,
+		Secure:   request.TLS != nil || strings.EqualFold(request.Header.Get("X-Forwarded-Proto"), "https"),
+		SameSite: http.SameSiteStrictMode, Expires: expiresAt, MaxAge: int(time.Until(expiresAt).Seconds()),
+	})
+	writeJSON(response, http.StatusOK, map[string]any{"authenticated": true, "username": principal.Username})
+}
+
+func requireAuthentication(authentication Authentication, next http.Handler) http.Handler {
+	return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
+		_, authenticated, err := currentPrincipal(authentication, request)
+		if err != nil {
+			writeError(response, http.StatusServiceUnavailable, "authentication is unavailable")
+			return
+		}
+		if !authenticated {
+			response.Header().Set("Cache-Control", "no-store")
+			writeError(response, http.StatusUnauthorized, "authentication required")
+			return
+		}
+		next.ServeHTTP(response, request)
+	})
+}
+
+func currentPrincipal(authentication Authentication, request *http.Request) (authn.Principal, bool, error) {
+	if authentication == nil {
+		return authn.Principal{}, false, nil
+	}
+	cookie, err := request.Cookie(sessionCookieName)
+	if err != nil {
+		return authn.Principal{}, false, nil
+	}
+	return authentication.Current(cookie.Value)
+}
+
+func clearSessionCookie(response http.ResponseWriter, request *http.Request) {
+	http.SetCookie(response, &http.Cookie{
+		Name: sessionCookieName, Value: "", Path: "/", HttpOnly: true,
+		Secure:   request.TLS != nil || strings.EqualFold(request.Header.Get("X-Forwarded-Proto"), "https"),
+		SameSite: http.SameSiteStrictMode, MaxAge: -1,
+	})
+}
+
+func clientAddress(request *http.Request) string {
+	if address := net.ParseIP(request.Header.Get("CF-Connecting-IP")); address != nil {
+		return address.String()
+	}
+	host, _, err := net.SplitHostPort(request.RemoteAddr)
+	if err == nil {
+		return host
+	}
+	return request.RemoteAddr
+}
+
+type loginAttempt struct {
+	failures int
+	resetAt  time.Time
+}
+
+type loginLimiter struct {
+	mu       sync.Mutex
+	attempts map[string]loginAttempt
+	limit    int
+	window   time.Duration
+	now      func() time.Time
+}
+
+func newLoginLimiter(limit int, window time.Duration) *loginLimiter {
+	return &loginLimiter{attempts: make(map[string]loginAttempt), limit: limit, window: window, now: time.Now}
+}
+
+func (l *loginLimiter) Allow(key string) bool {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	attempt, exists := l.attempts[key]
+	if !exists || !attempt.resetAt.After(l.now()) {
+		delete(l.attempts, key)
+		return true
+	}
+	return attempt.failures < l.limit
+}
+
+func (l *loginLimiter) Failure(key string) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	now := l.now()
+	attempt := l.attempts[key]
+	if !attempt.resetAt.After(now) {
+		attempt = loginAttempt{resetAt: now.Add(l.window)}
+	}
+	attempt.failures++
+	l.attempts[key] = attempt
+}
+
+func (l *loginLimiter) Success(key string) {
+	l.mu.Lock()
+	delete(l.attempts, key)
+	l.mu.Unlock()
 }
 
 func handleMetrics(response http.ResponseWriter, request *http.Request, dependencies Dependencies) {
