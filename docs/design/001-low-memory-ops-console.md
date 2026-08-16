@@ -1,6 +1,6 @@
 # 001 Low-Memory Operations Console Design
 
-状态：已确认，Phase A-D 本地实现完成；目标 Linux 验收待 SSH 配置
+状态：已确认，Phase A-D 与目标 Linux 验收完成；对外访问方案待确认
 版本：001
 基线 commit：`1744489482045b17aa2361c5541aad95456cfefe`
 
@@ -155,7 +155,7 @@ origin-ops (127.0.0.1:9080)
 
 约束：
 
-- `publicUrl` 只允许 `http` 或 `https`。
+- 配置了 `publicUrl` 时只允许 `http` 或 `https`；无公网入口的系统服务和内部组件可省略该字段。
 - `healthUrl` 默认只允许 loopback 或明确允许的目标。
 - systemd unit 名必须来自配置，不接受 API 请求传入任意 unit。
 - 版本 001 只执行固定参数的 `systemctl show` 查询，不执行 start、stop、restart。
@@ -231,14 +231,14 @@ origin-ops (127.0.0.1:9080)
 - [x] Go module、静态资源内嵌、配置加载和 HTTP server。
 - [x] Linux 指标采集器和非 Linux 明确失败实现。
 - [x] 固定长度历史存储、区间聚合和单元测试。
-- [ ] 目标 Linux 主机上的采样值与资源预算验收。
+- [x] 目标 Linux 主机上的采样值与资源预算验收。
 
 ### Phase B: Read-only inventory
 
 - [x] systemd 状态适配器。
 - [x] HTTP 健康检查适配器。
 - [x] 应用和只读发布记录 API。
-- [ ] 目标服务器实际应用配置与只读查询验收。
+- [x] 目标服务器实际应用配置与只读查询验收。
 
 ### Phase C: Frontend integration
 
@@ -253,7 +253,7 @@ origin-ops (127.0.0.1:9080)
 - [x] 本地与目标 Linux 构建验证。
 - [x] 资源测量、安全检查和部署前清单。
 
-Phase D 的资源测量、安全检查和部署步骤已记录在 `docs/deployment.md`；当前环境无法替代目标 Linux 主机完成实测。
+Phase D 的资源测量、安全检查和部署步骤已记录在 `docs/deployment.md`。目标主机 `sub2api-cf` 已完成实测：`origin-ops.service` 以 `origin-ops` 用户运行并仅监听 `127.0.0.1:9080`；空闲 RSS 约 11 MB，31 天查询的进程峰值 RSS 为 12,044 KB。纳管配置包含 23 个应用条目和 38 个 systemd 服务。Docker 工作负载只通过已有 loopback HTTP 健康端点纳管，不读取 Docker socket；没有 HTTP 健康端点的容器会明确显示为未配置健康检查。
 
 生产安装和 Caddy/cloudflared 变更必须再次获得用户明确授权。
 

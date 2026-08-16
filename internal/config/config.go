@@ -133,8 +133,10 @@ func (a Application) Validate() error {
 	if strings.TrimSpace(a.Name) == "" {
 		return fmt.Errorf("name is required")
 	}
-	if err := validateWebURL(a.PublicURL, false); err != nil {
-		return fmt.Errorf("publicUrl: %w", err)
+	if a.PublicURL != "" {
+		if err := validateWebURL(a.PublicURL, false); err != nil {
+			return fmt.Errorf("publicUrl: %w", err)
+		}
 	}
 	if a.HealthURL != "" {
 		if err := validateWebURL(a.HealthURL, true); err != nil {

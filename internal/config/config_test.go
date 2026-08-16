@@ -78,3 +78,16 @@ func TestValidateApplicationAcceptsConfiguredReadOnlySources(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestValidateApplicationAllowsMissingPublicURL(t *testing.T) {
+	cfg := Default()
+	cfg.Applications = []Application{{
+		ID:            "system-services",
+		Name:          "System services",
+		Services:      []string{"cron.service"},
+		ReleaseRecord: "/var/lib/origin-ops/releases/system-services.jsonl",
+	}}
+	if err := cfg.Validate(); err != nil {
+		t.Fatalf("Validate error = %v", err)
+	}
+}
